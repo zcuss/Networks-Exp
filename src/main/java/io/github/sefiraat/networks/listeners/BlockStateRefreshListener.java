@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 
@@ -56,9 +57,6 @@ public class BlockStateRefreshListener implements Listener {
         return bp(block.getX(), block.getY(), block.getZ());
     }
 
-    //我们先用timeit测了，你测还是我测，我16g，现在还剩2g
-    //你内存多少，im 16g，那我来 :|
-    // 那我测官方版的
     static long bp(int x, int y, int z) {
         return BlockPosition.getAsLong(x, y, z);
     }

@@ -84,13 +84,7 @@ public abstract class NetworkObject extends SlimefunItem implements AdminDebugga
                 public void onPlayerPlace(@Nonnull BlockPlaceEvent blockPlaceEvent) {
                     onPlace(blockPlaceEvent);
                 }
-            },
-            new ItemUseHandler() {
-                @Override
-                public void onRightClick(PlayerRightClickEvent playerRightClickEvent) {
-                    prePlace(playerRightClickEvent);
-                }
-            }
+            }, (ItemUseHandler) this::prePlace
         );
     }
 
@@ -149,16 +143,10 @@ public abstract class NetworkObject extends SlimefunItem implements AdminDebugga
                         controllerLocation = networkRoot.getController();
                     } else if (!controllerLocation.equals(networkRoot.getController())) {
                         // Location differs from that previously recorded, would result in two controllers
-                        cancelPlace(event);
                     }
                 }
             }
         }
-    }
-
-    protected void cancelPlace(PlayerRightClickEvent event) {
-        event.getPlayer().sendMessage(Theme.ERROR.getColor() + "This placement would connect two controllers!");
-        event.cancel();
     }
 
     protected void onPlace(@Nonnull BlockPlaceEvent event) {

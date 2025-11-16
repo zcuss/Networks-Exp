@@ -52,7 +52,6 @@ public class NetworkController extends NetworkObject {
 
                 @Override
                 public void tick(Block block, SlimefunItem item, Config data) {
-
                     if (!firstTickMap.containsKey(block.getLocation())) {
                         onFirstTick(block, data);
                         firstTickMap.put(block.getLocation(), true);
@@ -92,7 +91,6 @@ public class NetworkController extends NetworkObject {
 
                 // For directly adjacent controllers
                 if (slimefunItem instanceof NetworkController) {
-                    cancelPlace(event);
                     return;
                 }
 
@@ -104,17 +102,10 @@ public class NetworkController extends NetworkObject {
 
                 // There is a definition, if it has a node, then it's part of an active network.
                 if (definition.getNode() != null) {
-                    cancelPlace(event);
                     return;
                 }
             }
         }
-    }
-
-    @Override
-    protected void cancelPlace(PlayerRightClickEvent event) {
-        event.getPlayer().sendMessage(Theme.ERROR.getColor() + "This network already has a controller!");
-        event.cancel();
     }
 
     private void onFirstTick(@Nonnull Block block, @Nonnull Config data) {

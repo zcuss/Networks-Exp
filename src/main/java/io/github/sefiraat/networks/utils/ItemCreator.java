@@ -25,6 +25,7 @@ public class ItemCreator {
     }
 
     public static ItemStack create(ItemStack item, String name, String... lore) {
+        item = item.clone();
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         meta.setLore(Arrays.stream(lore).toList());
@@ -33,6 +34,7 @@ public class ItemCreator {
     }
 
     public static ItemStack create(ItemStack item, String name) {
+        item = item.clone();
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         item.setItemMeta(meta);

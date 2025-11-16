@@ -292,7 +292,11 @@ public class NetworkRoot extends NetworkNode {
             case IMPORT -> importers.add(location);
             case EXPORT -> exporters.add(location);
             case GRID -> grids.add(location);
-            case CELL -> cells.add(location);
+            case CELL -> {
+                if (BlockStorage.check(location) instanceof NetworkCell) {
+                    cells.add(location);
+                }
+            }
             case GRABBER -> grabbers.add(location);
             case PUSHER -> pushers.add(location);
             case PURGER -> purgers.add(location);
@@ -300,7 +304,11 @@ public class NetworkRoot extends NetworkNode {
             case POWER_NODE -> powerNodes.add(location);
             case POWER_DISPLAY -> powerDisplays.add(location);
             case ENCODER -> encoders.add(location);
-            case GREEDY_BLOCK -> greedyBlocks.add(location);
+            case GREEDY_BLOCK -> {
+                if (BlockStorage.check(location) instanceof NetworkGreedyBlock) {
+                    greedyBlocks.add(location);
+                }
+            }
             case CUTTER -> cutters.add(location);
             case PASTER -> pasters.add(location);
             case VACUUM -> vacuums.add(location);
@@ -1254,7 +1262,12 @@ public class NetworkRoot extends NetworkNode {
 
         for (BlockMenu blockMenu : getCellMenus()) {
             blockMenu.markDirty();
+            if (incoming.getAmount() == 0) {
+                break;
+            }
+
             blockMenu.pushItem(incoming, CELL_AVAILABLE_SLOTS);
+            incoming.setAmount(0);
             if (incoming.getAmount() == 0) {
                 // Netex - Reduce start
                 uncontrolAccessInput(accessor);

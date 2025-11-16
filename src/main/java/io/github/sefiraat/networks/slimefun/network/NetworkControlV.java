@@ -143,6 +143,7 @@ public class NetworkControlV extends NetworkDirectional {
             if (SupportedPluginManager.getInstance().isMcMMO()) {
                 mcMMO.getUserBlockTracker().setIneligible(targetBlock);
             }
+
             ParticleUtils.displayParticleRandomly(
                 LocationUtils.centre(targetBlock.getLocation()),
                 Particle.ELECTRIC_SPARK,

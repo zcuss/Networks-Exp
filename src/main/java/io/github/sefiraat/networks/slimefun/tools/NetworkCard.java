@@ -37,44 +37,41 @@ public class NetworkCard extends SlimefunItem {
     public NetworkCard(ItemGroup itemGroup, SlimefunItemStack item, RecipeType recipeType, ItemStack[] recipe, int size) {
         super(itemGroup, item, recipeType, recipe);
         this.size = size;
-        addItemHandler(new ItemUseHandler() {
-            @Override
-            public void onRightClick(PlayerRightClickEvent e) {
-                final Player player = e.getPlayer();
-                final ItemStack card = player.getInventory().getItemInMainHand();
-                final ItemStack stackToSet = player.getInventory().getItemInOffHand().clone();
+        addItemHandler((ItemUseHandler) e -> {
+            final Player player = e.getPlayer();
+            final ItemStack card = player.getInventory().getItemInMainHand();
+            final ItemStack stackToSet = player.getInventory().getItemInOffHand().clone();
 
-                e.cancel();
-                if (card.getAmount() > 1) {
-                    player.sendMessage(Theme.WARNING + "Unstack cards before assigning an item.");
+            e.cancel();
+            if (card.getAmount() > 1) {
+                player.sendMessage(Theme.WARNING + "Unstack cards before assigning an item.");
+                return;
+            }
+
+            if (isBlacklisted(stackToSet)) {
+                player.sendMessage(Theme.WARNING + "This type of item cannot be stored in a Network Card.");
+                return;
+            }
+
+            final SlimefunItem cardItem = SlimefunItem.getByItem(card);
+            if (cardItem instanceof NetworkCard networkCard) {
+                final ItemMeta cardMeta = card.getItemMeta();
+                final CardInstance cardInstance = DataTypeMethods.getCustom(
+                    cardMeta,
+                    Keys.CARD_INSTANCE,
+                    PersistentCardInstanceType.TYPE,
+                    new CardInstance(null, 0, networkCard.getSize())
+                );
+
+                if (cardInstance.getAmount() > 0) {
+                    e.getPlayer().sendMessage(Theme.WARNING + "A card must be empty before trying to assign an item.");
                     return;
                 }
 
-                if (isBlacklisted(stackToSet)) {
-                    player.sendMessage(Theme.WARNING + "This type of item cannot be stored in a Network Card.");
-                    return;
-                }
-
-                final SlimefunItem cardItem = SlimefunItem.getByItem(card);
-                if (cardItem instanceof NetworkCard networkCard) {
-                    final ItemMeta cardMeta = card.getItemMeta();
-                    final CardInstance cardInstance = DataTypeMethods.getCustom(
-                        cardMeta,
-                        Keys.CARD_INSTANCE,
-                        PersistentCardInstanceType.TYPE,
-                        new CardInstance(null, 0, networkCard.getSize())
-                    );
-
-                    if (cardInstance.getAmount() > 0) {
-                        e.getPlayer().sendMessage(Theme.WARNING + "A card must be empty before trying to assign an item.");
-                        return;
-                    }
-
-                    cardInstance.setItemStack(stackToSet);
-                    DataTypeMethods.setCustom(cardMeta, Keys.CARD_INSTANCE, PersistentCardInstanceType.TYPE, cardInstance);
-                    cardInstance.updateLore(cardMeta);
-                    card.setItemMeta(cardMeta);
-                }
+                cardInstance.setItemStack(stackToSet);
+                DataTypeMethods.setCustom(cardMeta, Keys.CARD_INSTANCE, PersistentCardInstanceType.TYPE, cardInstance);
+                cardInstance.updateLore(cardMeta);
+                card.setItemMeta(cardMeta);
             }
         });
     }

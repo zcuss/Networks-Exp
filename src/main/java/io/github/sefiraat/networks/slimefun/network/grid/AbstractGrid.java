@@ -381,20 +381,26 @@ public abstract class AbstractGrid extends NetworkObject {
         );
     }
 
-    @SuppressWarnings("deprecation")
     public void receiveItem(
             Player player, ItemStack itemStack, ClickAction action, BlockMenu blockMenu) {
         NodeDefinition definition = NetworkStorage.getAllNetworkObjects().get(blockMenu.getLocation());
         receiveItem(definition.getNode().getRoot(), player, itemStack, action, blockMenu);
     }
 
-    @SuppressWarnings({"deprecation", "unused"})
+    @SuppressWarnings({"unused"})
     public void receiveItem(
             NetworkRoot root,
             Player player,
             @Nullable ItemStack itemStack,
             ClickAction action,
             BlockMenu blockMenu) {
+        NodeDefinition definition = NetworkStorage.getAllNetworkObjects().get(blockMenu.getLocation());
+        if (definition == null || definition.getNode() == null) {
+            clearDisplay(blockMenu);
+            blockMenu.close();
+            return;
+        }
+
         if (itemStack != null && itemStack.getType() != Material.AIR) {
             root.addItemStack0(blockMenu.getLocation(), itemStack);
         }

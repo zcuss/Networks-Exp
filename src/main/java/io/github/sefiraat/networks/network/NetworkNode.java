@@ -5,13 +5,10 @@ import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.slimefun.network.NetworkController;
 import io.github.sefiraat.networks.slimefun.network.NetworkPowerNode;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
+import lombok.Getter;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import javax.annotation.Nonnull;
 import java.util.EnumSet;
@@ -29,11 +26,14 @@ public class NetworkNode {
         BlockFace.WEST
     );
 
+    @Getter
     protected final Set<NetworkNode> childrenNodes = new HashSet<>();
+    @Getter
     protected NetworkNode parent = null;
     protected NetworkRoot root = null;
     protected Location nodePosition;
     protected NodeType nodeType;
+    @Getter
     protected long power;
 
     public NetworkNode(Location location, NodeType type) {
@@ -77,16 +77,8 @@ public class NetworkNode {
         this.root = root;
     }
 
-    public NetworkNode getParent() {
-        return parent;
-    }
-
     private void setParent(NetworkNode parent) {
         this.parent = parent;
-    }
-
-    public Set<NetworkNode> getChildrenNodes() {
-        return this.childrenNodes;
     }
 
     public void addAllChildren() {
@@ -104,7 +96,7 @@ public class NetworkNode {
             // Kill additional controllers if it isn't the root
             if (testType == NodeType.CONTROLLER && !testLocation.equals(getRoot().nodePosition)) {
                 killAdditionalController(testLocation);
-                continue;
+                return;
             }
 
             // Check if it's in the network already and, if not, create a child node and propagate further.
@@ -123,18 +115,8 @@ public class NetworkNode {
     }
 
     private void killAdditionalController(@Nonnull Location location) {
-        final Block block = location.getBlock();
-        final ItemStack toDrop = BlockStorage.retrieve(block);
-        if (toDrop != null) {
-            BukkitRunnable runnable = new BukkitRunnable() {
-                @Override
-                public void run() {
-                    location.getWorld().dropItemNaturally(location, toDrop);
-                    block.setType(Material.AIR);
-                }
-            };
-            runnable.runTask(Networks.getInstance());
-            NetworkController.wipeNetwork(location);
+        if (BlockStorage.check(location) instanceof NetworkController) {
+            Networks.getControllersSet().add(location);
         }
     }
 
@@ -148,9 +130,5 @@ public class NetworkNode {
             return blockCharge;
         }
         return 0;
-    }
-
-    public long getPower() {
-        return this.power;
     }
 }
