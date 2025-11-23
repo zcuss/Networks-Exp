@@ -160,7 +160,6 @@ public abstract class AbstractGrid extends NetworkObject {
         final NetworkRoot root = definition.getNode().getRoot();
         final GridCache gridCache = getCacheMap().get(blockMenu.getLocation().clone());
         final List<Map.Entry<ItemStack, Integer>> entries = getEntries(root, gridCache); // size是0，点F7，步入getEnt
-        // 你在这里打断点，看看entries大小，
         final int pages = (int) Math.ceil(entries.size() / (double) getDisplaySlots().length) - 1;
 
         gridCache.setMaxPages(pages);

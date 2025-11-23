@@ -41,11 +41,26 @@ public class NetworksSlimefunItemStacks {
     // Network Items
     public static final SlimefunItemStack NETWORK_CONTROLLER;
     public static final SlimefunItemStack NETWORK_BRIDGE;
+    public static final SlimefunItemStack NETWORK_BRIDGE_ORANGE;
+    public static final SlimefunItemStack NETWORK_BRIDGE_MAGENTA;
+    public static final SlimefunItemStack NETWORK_BRIDGE_LIGHT_BLUE;
+    public static final SlimefunItemStack NETWORK_BRIDGE_YELLOW;
+    public static final SlimefunItemStack NETWORK_BRIDGE_LIME;
+    public static final SlimefunItemStack NETWORK_BRIDGE_PINK;
+    public static final SlimefunItemStack NETWORK_BRIDGE_GRAY;
+    public static final SlimefunItemStack NETWORK_BRIDGE_CYAN;
+    public static final SlimefunItemStack NETWORK_BRIDGE_PURPLE;
+    public static final SlimefunItemStack NETWORK_BRIDGE_BLUE;
+    public static final SlimefunItemStack NETWORK_BRIDGE_BROWN;
+    public static final SlimefunItemStack NETWORK_BRIDGE_GREEN;
+    public static final SlimefunItemStack NETWORK_BRIDGE_RED;
+    public static final SlimefunItemStack NETWORK_BRIDGE_BLACK;
     public static final SlimefunItemStack NETWORK_MONITOR;
     public static final SlimefunItemStack NETWORK_IMPORT;
     public static final SlimefunItemStack NETWORK_EXPORT;
     public static final SlimefunItemStack NETWORK_GRABBER;
     public static final SlimefunItemStack NETWORK_PUSHER;
+    public static final SlimefunItemStack NETWORK_BEST_PUSHER;
     public static final SlimefunItemStack NETWORK_CONTROL_X;
     public static final SlimefunItemStack NETWORK_CONTROL_V;
     public static final SlimefunItemStack NETWORK_VACUUM;
@@ -224,6 +239,161 @@ public class NetworksSlimefunItemStacks {
                 "connect network objects together."
         );
 
+        NETWORK_BRIDGE_ORANGE = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_ORANGE",
+                new ItemStack(Material.ORANGE_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Orange"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Orange version of network bridge"
+        );
+
+        NETWORK_BRIDGE_MAGENTA = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_MAGENTA",
+                new ItemStack(Material.MAGENTA_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Magenta"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Magenta version of network bridge"
+
+        );
+
+        NETWORK_BRIDGE_LIGHT_BLUE = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_LIGHT_BLUE",
+                new ItemStack(Material.LIGHT_BLUE_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Light Blue"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Light blue version of network bridge"
+        );
+
+        NETWORK_BRIDGE_YELLOW = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_YELLOW",
+                new ItemStack(Material.YELLOW_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Yellow"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Yellow version of network bridge"
+        );
+
+        NETWORK_BRIDGE_LIME = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_LIME",
+                new ItemStack(Material.LIME_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Lime"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Lime version of network bridge"
+        );
+
+        NETWORK_BRIDGE_PINK = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_PINK",
+                new ItemStack(Material.PINK_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Pink"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Pink version of network bridge"
+        );
+
+        NETWORK_BRIDGE_GRAY = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_GRAY",
+                new ItemStack(Material.GRAY_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Gray"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Gray version of network bridge"
+        );
+
+        NETWORK_BRIDGE_CYAN = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_CYAN",
+                new ItemStack(Material.CYAN_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Cyan"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Cyan version of network bridge"
+        );
+
+        NETWORK_BRIDGE_PURPLE = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_PURPLE",
+                new ItemStack(Material.PURPLE_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Purple"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Purple version of network bridge"
+        );
+
+        NETWORK_BRIDGE_BLUE = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_BLUE",
+                new ItemStack(Material.BLUE_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Blue"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Blue version of network bridge"
+        );
+
+        NETWORK_BRIDGE_BROWN = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_BROWN",
+                new ItemStack(Material.BROWN_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Brown"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Brown version of network bridge"
+        );
+
+        NETWORK_BRIDGE_GREEN = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_GREEN",
+                new ItemStack(Material.GREEN_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Green"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Green version of network bridge"
+        );
+
+        NETWORK_BRIDGE_RED = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_RED",
+                new ItemStack(Material.RED_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Red"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Red version of network bridge"
+        );
+
+        NETWORK_BRIDGE_BLACK = Theme.themedSlimefunItemStack(
+                "NTW_BRIDGE_BLACK",
+                new ItemStack(Material.BLACK_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Bridge Black"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Black version of network bridge"
+        );
+
         NETWORK_MONITOR = Theme.themedSlimefunItemStack(
                 "NTW_MONITOR",
                 new ItemStack(Material.GREEN_STAINED_GLASS),
@@ -278,6 +448,18 @@ public class NetworksSlimefunItemStacks {
                 "The Network Pusher will try",
                 "to push a matching item from a",
                 "given item into the chosen machine."
+        );
+
+        NETWORK_BEST_PUSHER = Theme.themedSlimefunItemStack(
+                "NTW_BEST_PUSHER",
+                new ItemStack(Material.BROWN_STAINED_GLASS),
+                Theme.MACHINE,
+                "Network Advanced Pusher",
+                "The Network Advanced Pusher will try",
+                "to push a matching item from a",
+                "given item into the chosen machine.",
+                "",
+                "Advanced version network pusher"
         );
 
         NETWORK_CONTROL_X = Theme.themedSlimefunItemStack(

@@ -50,8 +50,8 @@
     </pluginRepositories>
 
     <properties>
-        <maven.compiler.source>16</maven.compiler.source>
-        <maven.compiler.target>16</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sonar.projectKey>Networks</sonar.projectKey>
         <sonar.organization>sefiraat</sonar.organization>
@@ -131,12 +131,12 @@
             <url>https://repo.papermc.io/repositories/maven-public</url>
         </repository>
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>sk89q</id>
+            <url>https://maven.enginehub.org/repo/</url>
         </repository>
         <repository>
-            <id>jeffMediaPublic</id>
-            <url>https://repo.jeff-media.com/public</url>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
         <repository>
             <id>mcmmo-repo</id>
@@ -161,13 +161,13 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.21.8-R0.1-SNAPSHOT</version>
+            <version>1.21.9-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.Slimefun</groupId>
             <artifactId>Slimefun4</artifactId>
-            <version>master-SNAPSHOT</version>
+            <version>experimental-SNAPSHOT</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -179,7 +179,7 @@
         <dependency>
             <groupId>dev.sefiraat</groupId>
             <artifactId>SefiLib</artifactId>
-            <version>0.2.6</version>
+            <version>0.3.0</version>
             <scope>compile</scope>
         </dependency>
 
@@ -194,7 +194,7 @@
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
-            <version>3.0.2</version>
+            <version>3.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -204,9 +204,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>de.jeff_media</groupId>
+            <groupId>com.jeff-media</groupId>
             <artifactId>MorePersistentDataTypes</artifactId>
-            <version>1.0.0</version>
+            <version>2.4.0</version>
             <scope>compile</scope>
         </dependency>
 
@@ -232,7 +232,7 @@
         <dependency>
             <groupId>com.bgsoftware</groupId>
             <artifactId>WildChestsAPI</artifactId>
-            <version>2024.1</version>
+            <version>2025.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

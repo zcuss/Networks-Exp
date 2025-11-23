@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 /**
  * @author balugaq
  */
-@SuppressWarnings("unused")
 @ApiStatus.Experimental
 public class Converter {
     public static final ItemStack AIR = new ItemStack(Material.AIR);
@@ -39,16 +38,6 @@ public class Converter {
 
     public static @NotNull ItemStack getItem(@NotNull SlimefunItemStack slimefunItemStack, int amount) {
         return getItem(asBukkit(slimefunItemStack), amount);
-    }
-
-    /**
-     * Converts a {@link io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack} to a Bukkit ItemStack.
-     *
-     * @param cis the {@link io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack} to convert
-     * @return the converted Bukkit ItemStack
-     */
-    public static @NotNull ItemStack getItem(@NotNull io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack cis) {
-        return asBukkit(cis);
     }
 
     /**
@@ -215,53 +204,9 @@ public class Converter {
      * @param item the {@link SlimefunItemStack} to convert
      * @return the converted Bukkit ItemStack
      */
-    @SuppressWarnings({"RedundantClassCall", "ConstantValue"})
+    @SuppressWarnings({"ConstantValue"})
     @NotNull
     public static ItemStack asBukkit(@Nullable SlimefunItemStack item) {
-        if (item == null) {
-            return AIR.clone();
-        }
-
-        ItemStack itemStack;
-        if (ItemStack.class.isInstance(item)) {
-            itemStack = ItemStack.class.cast(item);
-        } else {
-            try {
-                itemStack = ReflectionUtil.getValue(item, "item", ItemStack.class);
-                if (itemStack == null) throw new Throwable();
-            } catch (Throwable ignored) {
-                try {
-                    itemStack = (ItemStack) ReflectionUtil.invokeMethod(item, "getItem");
-                    if (itemStack == null) throw new Throwable();
-                } catch (Throwable ignored2) {
-                    try {
-                        itemStack = (ItemStack) ReflectionUtil.invokeMethod(item, "item");
-                        if (itemStack == null) throw new Throwable();
-                    } catch (Throwable ignored3) {
-                        return AIR.clone();
-                    }
-                }
-            }
-        }
-
-        ItemStack bukkitItem = new ItemStack(itemStack.getType());
-        bukkitItem.setAmount(item.getAmount());
-        if (item.hasItemMeta()) {
-            bukkitItem.setItemMeta(item.getItemMeta());
-        }
-
-        return bukkitItem;
-    }
-
-    /**
-     * Converts a {@link io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack} to a Bukkit ItemStack.
-     *
-     * @param item the {@link io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack} to convert
-     * @return the converted Bukkit ItemStack
-     */
-    @SuppressWarnings({"RedundantClassCall", "ConstantValue"})
-    @NotNull
-    public static ItemStack asBukkit(@Nullable io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack item) {
         if (item == null) {
             return AIR.clone();
         }

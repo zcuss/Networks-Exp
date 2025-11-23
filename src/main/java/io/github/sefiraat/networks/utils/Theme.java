@@ -3,9 +3,7 @@ package io.github.sefiraat.networks.utils;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import lombok.Getter;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
@@ -14,13 +12,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
+@SuppressWarnings({"deprecation", "DuplicatedCode"})
 public enum Theme {
+    GOLD(ChatColor.GOLD, ""),
     WARNING(ChatColor.YELLOW, "Warning"),
     ERROR(ChatColor.RED, "Error"),
     NOTICE(ChatColor.WHITE, "Notice"),
     PASSIVE(ChatColor.GRAY, ""),
     SUCCESS(ChatColor.GREEN, "Success"),
-    MAIN(ChatColor.of("#21588f"), "Alone"),
+    MAIN(ChatColor.of("#9a00f8"), "Alone"),
     CLICK_INFO(ChatColor.of("#e4ed32"), "Click here"),
     RESEARCH(ChatColor.of("#a60e03"), "Research"),
     CRAFTING(ChatColor.of("#dbcea9"), "Crafting Material"),
@@ -112,23 +112,11 @@ public enum Theme {
         );
     }
 
-    @Nonnull
-    public Particle.DustOptions getDustOptions(float size) {
-        return new Particle.DustOptions(
-                Color.fromRGB(
-                        color.getColor().getRed(),
-                        color.getColor().getGreen(),
-                        color.getColor().getBlue()
-                ),
-                size
-        );
-    }
-
     /**
      * Returns the name of this enum constant, as contained in the
-     * declaration.  This method may be overridden, though it typically
-     * isn't necessary or desirable.  An enum class should override this
-     * method when a more "programmer-friendly" string form exists.
+     * declaration. This method may be overridden, though it typically
+     * isn't necessary or desirable. An enum class should override this
+     * method when a more “programmer-friendly” string form exists.
      *
      * @return the name of this enum constant
      */

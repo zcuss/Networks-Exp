@@ -2,10 +2,8 @@ package io.github.sefiraat.networks.slimefun.network;
 
 import dev.sefiraat.sefilib.misc.ParticleUtils;
 import dev.sefiraat.sefilib.world.LocationUtils;
-import io.github.bakedlibs.dough.blocks.BlockPosition;
 import io.github.sefiraat.networks.NetworkStorage;
 import io.github.sefiraat.networks.Networks;
-import io.github.sefiraat.networks.listeners.BlockStateRefreshListener;
 import io.github.sefiraat.networks.network.NodeDefinition;
 import io.github.sefiraat.networks.network.NodeType;
 import io.github.sefiraat.networks.utils.ItemCreator;
@@ -15,6 +13,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.blocks.BlockPosition;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
@@ -24,8 +23,6 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Container;
 import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.inventory.ItemStack;
 
@@ -111,12 +108,12 @@ public class NetworkControlX extends NetworkDirectional {
         }
 
         final ItemStack templateStack = blockMenu.getItemInSlot(TEMPLATE_SLOT);
-        if (templateStack == null || templateStack.getType().isAir()) {
-            return;
-        }
+        boolean hasTemplate = templateStack != null && !templateStack.getType().isAir();
 
-        if ((targetBlock.getType() != templateStack.getType()) || (SlimefunItem.getByItem(templateStack) != null)) {
-            return;
+        if (hasTemplate) {
+            if (targetBlock.getType() != templateStack.getType() || SlimefunItem.getByItem(templateStack) != null) {
+                return;
+            }
         }
 
         final UUID uuid = UUID.fromString(BlockStorage.getLocationInfo(blockMenu.getLocation(), OWNER_KEY));
@@ -126,28 +123,36 @@ public class NetworkControlX extends NetworkDirectional {
             return;
         }
 
+        if (material == Material.CHEST
+                || material == Material.TRAPPED_CHEST
+                || material == Material.ENDER_CHEST
+                || material == Material.BARREL
+                || material == Material.SHULKER_BOX
+                || material.name().endsWith("_SHULKER_BOX")
+                || material == Material.FURNACE
+                || material == Material.BLAST_FURNACE
+                || material == Material.SMOKER
+                || material == Material.HOPPER
+                || material == Material.DROPPER
+                || material == Material.DISPENSER
+                || material == Material.BREWING_STAND) {
+            return;
+        }
+
         final ItemStack resultStack = new ItemStack(material, 1);
 
-        CraftBlock cb = ((CraftBlock) targetBlock);
-        ServerLevel level = cb.getCraftWorld().getHandle();
-        LevelLightEngine ll = level.chunkSource.getLightEngine();
+        definition.getNode().getRoot().addItemStack0(blockMenu.getBlock().getLocation(), resultStack);
 
         if (resultStack.getAmount() == 0) {
+            CraftBlock cb = ((CraftBlock) targetBlock);
+            ServerLevel level = cb.getCraftWorld().getHandle();
+            LevelLightEngine ll = level.chunkSource.getLightEngine();
+
             this.blockCache.add(targetPosition);
+
             Bukkit.getScheduler().runTask(Networks.getInstance(), bukkitTask -> {
-                final BlockState state = BlockStateRefreshListener.getState(targetBlock);
-
-                if (state instanceof Container || material == Material.ENDER_CHEST) {
-                    return;
-                }
-
-                Bukkit.getScheduler().runTaskAsynchronously(Networks.getInstance(), () ->
-                        definition.getNode().getRoot().addItemStack0(blockMenu.getBlock().getLocation(), resultStack)
-                );
-
-                level.setBlock(cb.getPosition(), Blocks.AIR.defaultBlockState(), 0);
                 level.removeBlockEntity(cb.getPosition());
-                level.getMinecraftWorld().sendBlockUpdated(cb.getPosition(), cb.getNMS(), Blocks.AIR.defaultBlockState(), 3);
+                level.setBlock(cb.getPosition(), Blocks.AIR.defaultBlockState(), 3);
                 ll.checkBlock(cb.getPosition());
 
                 ParticleUtils.displayParticleRandomly(

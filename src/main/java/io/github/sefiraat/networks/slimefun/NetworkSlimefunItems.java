@@ -5,6 +5,8 @@ import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.slimefun.network.*;
 import io.github.sefiraat.networks.slimefun.network.grid.NetworkCraftingGrid;
 import io.github.sefiraat.networks.slimefun.network.grid.NetworkGrid;
+import io.github.sefiraat.networks.slimefun.network.pusher.NetworkBestPusher;
+import io.github.sefiraat.networks.slimefun.network.pusher.NetworkPusher;
 import io.github.sefiraat.networks.slimefun.tools.*;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
@@ -32,11 +34,26 @@ public class NetworkSlimefunItems {
 
     public static final NetworkController NETWORK_CONTROLLER;
     public static final NetworkBridge NETWORK_BRIDGE;
+    public static final NetworkBridge NETWORK_BRIDGE_ORANGE;
+    public static final NetworkBridge NETWORK_BRIDGE_MAGENTA;
+    public static final NetworkBridge NETWORK_BRIDGE_LIGHT_BLUE;
+    public static final NetworkBridge NETWORK_BRIDGE_YELLOW;
+    public static final NetworkBridge NETWORK_BRIDGE_LIME;
+    public static final NetworkBridge NETWORK_BRIDGE_PINK;
+    public static final NetworkBridge NETWORK_BRIDGE_GRAY;
+    public static final NetworkBridge NETWORK_BRIDGE_CYAN;
+    public static final NetworkBridge NETWORK_BRIDGE_PURPLE;
+    public static final NetworkBridge NETWORK_BRIDGE_BLUE;
+    public static final NetworkBridge NETWORK_BRIDGE_BROWN;
+    public static final NetworkBridge NETWORK_BRIDGE_GREEN;
+    public static final NetworkBridge NETWORK_BRIDGE_RED;
+    public static final NetworkBridge NETWORK_BRIDGE_BLACK;
     public static final NetworkMonitor NETWORK_MONITOR;
     public static final NetworkImport NETWORK_IMPORT;
     public static final NetworkExport NETWORK_EXPORT;
     public static final NetworkGrabber NETWORK_GRABBER;
     public static final NetworkPusher NETWORK_PUSHER;
+    public static final NetworkBestPusher NETWORK_BEST_PUSHER;
     public static final NetworkControlX NETWORK_CONTROL_X;
     public static final NetworkControlV NETWORK_CONTROL_V;
     public static final NetworkVacuum NETWORK_VACUUM;
@@ -242,6 +259,174 @@ public class NetworkSlimefunItems {
                 Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE, 8)
         );
 
+        NETWORK_BRIDGE_ORANGE = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_ORANGE,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.ORANGE_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.ORANGE_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_ORANGE, 8)
+        );
+
+        NETWORK_BRIDGE_MAGENTA = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_MAGENTA,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.MAGENTA_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.MAGENTA_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_MAGENTA, 8)
+        );
+
+        NETWORK_BRIDGE_LIGHT_BLUE = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_LIGHT_BLUE,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.LIGHT_BLUE_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.LIGHT_BLUE_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_LIGHT_BLUE, 8)
+        );
+
+        NETWORK_BRIDGE_YELLOW = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_YELLOW,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.YELLOW_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.YELLOW_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_YELLOW, 8)
+        );
+
+        NETWORK_BRIDGE_LIME = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_LIME,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.LIME_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.LIME_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_LIME, 8)
+        );
+
+        NETWORK_BRIDGE_PINK = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_PINK,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.PINK_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.PINK_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_PINK, 8)
+        );
+
+        NETWORK_BRIDGE_GRAY = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_GRAY,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.GRAY_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.GRAY_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_GRAY, 8)
+        );
+
+        NETWORK_BRIDGE_CYAN = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_CYAN,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.CYAN_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.CYAN_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_CYAN, 8)
+        );
+
+        NETWORK_BRIDGE_PURPLE = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_PURPLE,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.PURPLE_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.PURPLE_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_PURPLE, 8)
+        );
+
+        NETWORK_BRIDGE_BLUE = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_BLUE,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.BLUE_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.BLUE_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_BLUE, 8)
+        );
+
+        NETWORK_BRIDGE_BROWN = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_BROWN,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.BROWN_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.BROWN_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_BROWN, 8)
+        );
+
+        NETWORK_BRIDGE_GREEN = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_GREEN,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.GREEN_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.GREEN_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_GREEN, 8)
+        );
+
+        NETWORK_BRIDGE_RED = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_RED,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.RED_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.RED_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_RED, 8)
+        );
+
+        NETWORK_BRIDGE_BLACK = new NetworkBridge(
+                NetworksItemGroups.MORE_NETWORK_BRIDGE,
+                NetworksSlimefunItemStacks.NETWORK_BRIDGE_BLACK,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                makeRecipe(
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.BLACK_STAINED_GLASS), OPTIC_GLASS.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_BRIDGE.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), new ItemStack(Material.BLACK_STAINED_GLASS), OPTIC_GLASS.getItem()
+                ),
+                Converter.getItem(NetworksSlimefunItemStacks.NETWORK_BRIDGE_BLACK, 8)
+        );
+
         NETWORK_MONITOR = new NetworkMonitor(
                 NetworksItemGroups.NETWORK_ITEMS,
                 NetworksSlimefunItemStacks.NETWORK_MONITOR,
@@ -296,6 +481,16 @@ public class NetworkSlimefunItems {
                         OPTIC_GLASS.getItem(), OPTIC_CABLE.getItem(), OPTIC_GLASS.getItem()
                 )
         );
+
+        NETWORK_BEST_PUSHER = new NetworkBestPusher(
+                NetworksItemGroups.NETWORK_ITEMS,
+                NetworksSlimefunItemStacks.NETWORK_BEST_PUSHER,
+                RecipeType.ENHANCED_CRAFTING_TABLE,
+                new ItemStack[]{
+                        NETWORK_PUSHER.getItem(), OPTIC_CABLE.getItem(), NETWORK_PUSHER.getItem(),
+                        OPTIC_CABLE.getItem(), NETWORK_PUSHER.getItem(), OPTIC_CABLE.getItem(),
+                        OPTIC_GLASS.getItem(), OPTIC_CABLE.getItem(), OPTIC_GLASS.getItem(),
+                });
 
         NETWORK_CONTROL_X = new NetworkControlX(
                 NetworksItemGroups.NETWORK_ITEMS,
@@ -835,11 +1030,26 @@ public class NetworkSlimefunItems {
 
         NETWORK_CONTROLLER.register(plugin);
         NETWORK_BRIDGE.register(plugin);
+        NETWORK_BRIDGE_ORANGE.register(plugin);
+        NETWORK_BRIDGE_MAGENTA.register(plugin);
+        NETWORK_BRIDGE_LIGHT_BLUE.register(plugin);
+        NETWORK_BRIDGE_YELLOW.register(plugin);
+        NETWORK_BRIDGE_LIME.register(plugin);
+        NETWORK_BRIDGE_PINK.register(plugin);
+        NETWORK_BRIDGE_GRAY.register(plugin);
+        NETWORK_BRIDGE_CYAN.register(plugin);
+        NETWORK_BRIDGE_PURPLE.register(plugin);
+        NETWORK_BRIDGE_BLUE.register(plugin);
+        NETWORK_BRIDGE_BROWN.register(plugin);
+        NETWORK_BRIDGE_GREEN.register(plugin);
+        NETWORK_BRIDGE_RED.register(plugin);
+        NETWORK_BRIDGE_BLACK.register(plugin);
         NETWORK_MONITOR.register(plugin);
         NETWORK_IMPORT.register(plugin);
         NETWORK_EXPORT.register(plugin);
         NETWORK_GRABBER.register(plugin);
         NETWORK_PUSHER.register(plugin);
+        NETWORK_BEST_PUSHER.register(plugin);
         NETWORK_CONTROL_X.register(plugin);
         NETWORK_CONTROL_V.register(plugin);
         NETWORK_VACUUM.register(plugin);

@@ -2,6 +2,7 @@ package io.github.sefiraat.networks.slimefun.tools;
 
 import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.slimefun.network.*;
+import io.github.sefiraat.networks.slimefun.network.pusher.NetworkPusher;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.thebusybiscuit.slimefun4.api.events.PlayerRightClickEvent;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;

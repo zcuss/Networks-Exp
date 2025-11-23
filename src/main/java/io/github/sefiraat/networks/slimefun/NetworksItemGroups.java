@@ -21,8 +21,8 @@ public final class NetworksItemGroups {
     public static final MainFlexGroup MAIN = new MainFlexGroup(
             Keys.newKey("main"),
             ItemCreator.create(
-                    new ItemStack(Material.BLACK_STAINED_GLASS),
-                    Theme.MAIN.getColor() + "Networks"
+                    new ItemStack(Material.CHORUS_FLOWER),
+                    Theme.MAIN.getColor() + "Networks V2"
             )
     );
 
@@ -58,6 +58,14 @@ public final class NetworksItemGroups {
             )
     );
 
+    public static final DummyItemGroup MORE_NETWORK_BRIDGE = new DummyItemGroup(
+            Keys.newKey("more_network_bridge"),
+            ItemCreator.create(
+                    new ItemStack(Material.PINK_STAINED_GLASS),
+                    Theme.MAIN.getColor() + "More Network Bridge"
+            )
+    );
+
     public static final ItemGroup DISABLED_ITEMS = new HiddenItemGroup(
             Keys.newKey("disabled_items"),
             ItemCreator.create(
@@ -76,6 +84,7 @@ public final class NetworksItemGroups {
         NetworksItemGroups.NETWORK_ITEMS.register(plugin);
         NetworksItemGroups.NETWORK_QUANTUMS.register(plugin);
         NetworksItemGroups.DISABLED_ITEMS.register(plugin);
+        NetworksItemGroups.MORE_NETWORK_BRIDGE.register(plugin);
     }
 
     public static class HiddenItemGroup extends ItemGroup {
