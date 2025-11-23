@@ -5,7 +5,7 @@
 Networks is a Slimefun4 addon that brings a simple yet powerful item storage and movement network that works along side
 cargo.
 
-**This is a modified by mmmjjkx. Only support MC 1.20.6+**
+**This is a modified version by mmmjjkx. Only support MC 1.20.6+ and JDK 21+**
 
 ## Download Networks
 
