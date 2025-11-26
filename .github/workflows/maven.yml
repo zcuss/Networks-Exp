@@ -30,8 +30,23 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      - name: Install local paper-nms JAR into Maven repo
+        # assume the JAR lives in repository root as paper-1.20.4-499.jar
+        run: |
+          if [ ! -f "./paper-1.20.4-499.jar" ]; then
+            echo "ERROR: paper-1.20.4-499.jar not found in repository root"
+            exit 1
+          fi
+          mvn install:install-file \
+            -Dfile="./paper-1.20.4-499.jar" \
+            -DgroupId=ca.bkaw \
+            -DartifactId=paper-nms \
+            -Dversion=1.20.4-SNAPSHOT \
+            -Dpackaging=jar \
+            -DgeneratePom=true
+
       - name: Build with Maven
-        run: mvn clean package
+        run: mvn -U -DskipTests=true clean package
 
       - name: Rename JAR
         run: |
