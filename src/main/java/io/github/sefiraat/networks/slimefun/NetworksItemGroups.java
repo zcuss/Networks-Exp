@@ -73,9 +73,9 @@ public final class NetworksItemGroups {
     );
 
     public static final DummyItemGroup NETWORK_TEST = new DummyItemGroup(
-            Keys.newKey("more_network_bridge"),
+            Keys.newKey("network_test"),
             ItemCreator.create(
-                    new ItemStack(Material.PINK_STAINED_GLASS),
+                    new ItemStack(Material.GLASS),
                     Theme.MAIN.getColor() + "Network Test"
             )
     );
@@ -99,6 +99,7 @@ public final class NetworksItemGroups {
         NETWORK_QUANTUMS.register(plugin);
         DISABLED_ITEMS.register(plugin);
         MORE_NETWORK_BRIDGE.register(plugin);
+        NETWORK_TEST.register(plugin);
     }
 
     public static class HiddenItemGroup extends ItemGroup {
