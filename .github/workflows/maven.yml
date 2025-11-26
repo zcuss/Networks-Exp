@@ -51,7 +51,7 @@ jobs:
       - name: Rename JAR
         run: |
           JAR_FILE=$(ls target/*.jar | head -n 1)
-          NEW_NAME="InfinityExpansion-${{ github.run_number }}.jar"
+          NEW_NAME="Networks-V2-${{ github.run_number }}.jar"
           mv "$JAR_FILE" "target/$NEW_NAME"
           echo "RENAMED_JAR=target/$NEW_NAME" >> $GITHUB_ENV
 
@@ -66,7 +66,7 @@ jobs:
       - name: Upload CI Artifact (JAR)
         uses: actions/upload-artifact@v4
         with:
-          name: InfinityExpansion-Build
+          name: Networks-V2-Build
           path: ${{ env.RENAMED_JAR }}
           compression-level: 0
 
