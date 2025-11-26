@@ -55,6 +55,9 @@ public class NetworksSlimefunItemStacks {
     public static final SlimefunItemStack NETWORK_BRIDGE_GREEN;
     public static final SlimefunItemStack NETWORK_BRIDGE_RED;
     public static final SlimefunItemStack NETWORK_BRIDGE_BLACK;
+
+    public static final SlimefunItemStack NETWORK_BRIDGE_TEST;
+
     public static final SlimefunItemStack NETWORK_MONITOR;
     public static final SlimefunItemStack NETWORK_IMPORT;
     public static final SlimefunItemStack NETWORK_EXPORT;
@@ -388,6 +391,17 @@ public class NetworksSlimefunItemStacks {
                 new ItemStack(Material.BLACK_STAINED_GLASS),
                 Theme.MACHINE,
                 "Network Bridge Black"
+                , "The bridge allows you to cheaply",
+                "connect network objects together.",
+                "",
+                "Black version of network bridge"
+        );
+
+        NETWORK_BRIDGE_TEST = Theme.themedSlimefunItemStack(
+                "NETWORK_BRIDGE_TEST",
+                new ItemStack(Material.GLASS),
+                Theme.MACHINE,
+                "Network Bridge TEST"
                 , "The bridge allows you to cheaply",
                 "connect network objects together.",
                 "",
