@@ -84,7 +84,7 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
         tryUpdate();
 
         this.supportedPluginManager = new SupportedPluginManager();
-        NetworksItemGroups.registerAll(this);
+        // NetworksItemGroups.registerAll(this);
         setupSlimefun();
 
         this.listenerManager = new ListenerManager();
