@@ -100,6 +100,9 @@ public class NetworkSlimefunItems {
     public static final NetworkRake NETWORK_RAKE_3;
     public static final NetworkAdminDebugger NETWORK_ADMIN_DEBUGGER;
 
+    // Guard supaya setup() hanya jalan sekali
+    private static boolean registered = false;
+
     static {
         final ItemStack glass = new ItemStack(Material.GLASS);
 
@@ -730,7 +733,7 @@ public class NetworkSlimefunItems {
                 ),
                 NetworkQuantumStorage.getSizes()[7]
         );
-
+        // (static initializer lanjut seperti semula...)
         NETWORK_CAPACITOR_1 = new NetworkPowerNode(
                 NetworksItemGroups.NETWORK_ITEMS,
                 NetworksSlimefunItemStacks.NETWORK_CAPACITOR_1,
@@ -1012,89 +1015,122 @@ public class NetworkSlimefunItems {
         return realItems;
     }
 
-    public static void setup() {
+    /**
+     * Panggilan registrasi item Slimefun. Dicontain supaya cuma register sekali,
+     * thread-safe, dan tiap item dibungkus try/catch sehingga satu gagal tidak
+     * mencegah item lain.
+     */
+    public static synchronized void setup() {
         Networks plugin = Networks.getInstance();
 
-        SYNTHETIC_EMERALD_SHARD.register(plugin);
-        OPTIC_GLASS.register(plugin);
-        OPTIC_CABLE.register(plugin);
-        OPTIC_STAR.register(plugin);
-        RADIOACTIVE_OPTIC_STAR.register(plugin);
-        SHRINKING_BASE.register(plugin);
-        SIMPLE_NANOBOTS.register(plugin);
-        ADVANCED_NANOBOTS.register(plugin);
-        AI_CORE.register(plugin);
-        EMPOWERED_AI_CORE.register(plugin);
-        PRISTINE_AI_CORE.register(plugin);
-        INTERDIMENSIONAL_PRESENCE.register(plugin);
+        if (registered) {
+            if (plugin != null) {
+                plugin.getLogger().fine("NetworkSlimefunItems.setup() called but items already registered — skipping.");
+            }
+            return;
+        }
+        registered = true;
 
-        NETWORK_CONTROLLER.register(plugin);
-        NETWORK_BRIDGE.register(plugin);
-        NETWORK_BRIDGE_ORANGE.register(plugin);
-        NETWORK_BRIDGE_MAGENTA.register(plugin);
-        NETWORK_BRIDGE_LIGHT_BLUE.register(plugin);
-        NETWORK_BRIDGE_YELLOW.register(plugin);
-        NETWORK_BRIDGE_LIME.register(plugin);
-        NETWORK_BRIDGE_PINK.register(plugin);
-        NETWORK_BRIDGE_GRAY.register(plugin);
-        NETWORK_BRIDGE_CYAN.register(plugin);
-        NETWORK_BRIDGE_PURPLE.register(plugin);
-        NETWORK_BRIDGE_BLUE.register(plugin);
-        NETWORK_BRIDGE_BROWN.register(plugin);
-        NETWORK_BRIDGE_GREEN.register(plugin);
-        NETWORK_BRIDGE_RED.register(plugin);
-        NETWORK_BRIDGE_BLACK.register(plugin);
-        NETWORK_MONITOR.register(plugin);
-        NETWORK_IMPORT.register(plugin);
-        NETWORK_EXPORT.register(plugin);
-        NETWORK_GRABBER.register(plugin);
-        NETWORK_PUSHER.register(plugin);
-        NETWORK_BEST_PUSHER.register(plugin);
-        NETWORK_CONTROL_X.register(plugin);
-        NETWORK_CONTROL_V.register(plugin);
-        NETWORK_VACUUM.register(plugin);
-        NETWORK_VANILLA_GRABBER.register(plugin);
-        NETWORK_VANILLA_PUSHER.register(plugin);
-        NETWORK_WIRELESS_TRANSMITTER.register(plugin);
-        NETWORK_WIRELESS_RECEIVER.register(plugin);
-        NETWORK_PURGER.register(plugin);
-        NETWORK_GRID.register(plugin);
-        NETWORK_CRAFTING_GRID.register(plugin);
-        NETWORK_CELL.register(plugin);
-        NETWORK_GREEDY_BLOCK.register(plugin);
-        NETWORK_QUANTUM_WORKBENCH.register(plugin);
-        NETWORK_QUANTUM_STORAGE_1.register(plugin);
-        NETWORK_QUANTUM_STORAGE_2.register(plugin);
-        NETWORK_QUANTUM_STORAGE_3.register(plugin);
-        NETWORK_QUANTUM_STORAGE_4.register(plugin);
-        NETWORK_QUANTUM_STORAGE_5.register(plugin);
-        NETWORK_QUANTUM_STORAGE_6.register(plugin);
-        NETWORK_QUANTUM_STORAGE_7.register(plugin);
-        NETWORK_QUANTUM_STORAGE_8.register(plugin);
-        NETWORK_CAPACITOR_1.register(plugin);
-        NETWORK_CAPACITOR_2.register(plugin);
-        NETWORK_CAPACITOR_3.register(plugin);
-        NETWORK_CAPACITOR_4.register(plugin);
-        NETWORK_POWER_OUTLET_1.register(plugin);
-        NETWORK_POWER_OUTLET_2.register(plugin);
-        NETWORK_POWER_DISPLAY.register(plugin);
-        NETWORK_RECIPE_ENCODER.register(plugin);
-        NETWORK_AUTO_CRAFTER.register(plugin);
-        NETWORK_AUTO_CRAFTER_WITHHOLDING.register(plugin);
+        if (plugin == null) {
+            System.err.println("[Networks] NetworkSlimefunItems.setup(): Networks.getInstance() returned null — aborting registration.");
+            return;
+        }
 
-        CRAFTING_BLUEPRINT.register(plugin);
-        NETWORK_PROBE.register(plugin);
-        NETWORK_REMOTE.register(plugin);
-        NETWORK_REMOTE_EMPOWERED.register(plugin);
-        NETWORK_REMOTE_PRISTINE.register(plugin);
-        NETWORK_REMOTE_ULTIMATE.register(plugin);
-        NETWORK_CRAYON.register(plugin);
-        NETWORK_CONFIGURATOR.register(plugin);
-        NETWORK_WIRELESS_CONFIGURATOR.register(plugin);
-        NETWORK_RAKE_1.register(plugin);
-        NETWORK_RAKE_2.register(plugin);
-        NETWORK_RAKE_3.register(plugin);
+        // register all items, each via helper agar tidak crash seluruh setup jika satu gagal
+        registerSafely(plugin, () -> SYNTHETIC_EMERALD_SHARD.register(plugin), "SYNTHETIC_EMERALD_SHARD");
+        registerSafely(plugin, () -> OPTIC_GLASS.register(plugin), "OPTIC_GLASS");
+        registerSafely(plugin, () -> OPTIC_CABLE.register(plugin), "OPTIC_CABLE");
+        registerSafely(plugin, () -> OPTIC_STAR.register(plugin), "OPTIC_STAR");
+        registerSafely(plugin, () -> RADIOACTIVE_OPTIC_STAR.register(plugin), "RADIOACTIVE_OPTIC_STAR");
+        registerSafely(plugin, () -> SHRINKING_BASE.register(plugin), "SHRINKING_BASE");
+        registerSafely(plugin, () -> SIMPLE_NANOBOTS.register(plugin), "SIMPLE_NANOBOTS");
+        registerSafely(plugin, () -> ADVANCED_NANOBOTS.register(plugin), "ADVANCED_NANOBOTS");
+        registerSafely(plugin, () -> AI_CORE.register(plugin), "AI_CORE");
+        registerSafely(plugin, () -> EMPOWERED_AI_CORE.register(plugin), "EMPOWERED_AI_CORE");
+        registerSafely(plugin, () -> PRISTINE_AI_CORE.register(plugin), "PRISTINE_AI_CORE");
+        registerSafely(plugin, () -> INTERDIMENSIONAL_PRESENCE.register(plugin), "INTERDIMENSIONAL_PRESENCE");
 
-        NETWORK_ADMIN_DEBUGGER.register(plugin);
+        registerSafely(plugin, () -> NETWORK_CONTROLLER.register(plugin), "NETWORK_CONTROLLER");
+        registerSafely(plugin, () -> NETWORK_BRIDGE.register(plugin), "NETWORK_BRIDGE");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_ORANGE.register(plugin), "NETWORK_BRIDGE_ORANGE");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_MAGENTA.register(plugin), "NETWORK_BRIDGE_MAGENTA");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_LIGHT_BLUE.register(plugin), "NETWORK_BRIDGE_LIGHT_BLUE");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_YELLOW.register(plugin), "NETWORK_BRIDGE_YELLOW");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_LIME.register(plugin), "NETWORK_BRIDGE_LIME");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_PINK.register(plugin), "NETWORK_BRIDGE_PINK");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_GRAY.register(plugin), "NETWORK_BRIDGE_GRAY");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_CYAN.register(plugin), "NETWORK_BRIDGE_CYAN");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_PURPLE.register(plugin), "NETWORK_BRIDGE_PURPLE");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_BLUE.register(plugin), "NETWORK_BRIDGE_BLUE");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_BROWN.register(plugin), "NETWORK_BRIDGE_BROWN");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_GREEN.register(plugin), "NETWORK_BRIDGE_GREEN");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_RED.register(plugin), "NETWORK_BRIDGE_RED");
+        registerSafely(plugin, () -> NETWORK_BRIDGE_BLACK.register(plugin), "NETWORK_BRIDGE_BLACK");
+        registerSafely(plugin, () -> NETWORK_MONITOR.register(plugin), "NETWORK_MONITOR");
+        registerSafely(plugin, () -> NETWORK_IMPORT.register(plugin), "NETWORK_IMPORT");
+        registerSafely(plugin, () -> NETWORK_EXPORT.register(plugin), "NETWORK_EXPORT");
+        registerSafely(plugin, () -> NETWORK_GRABBER.register(plugin), "NETWORK_GRABBER");
+        registerSafely(plugin, () -> NETWORK_PUSHER.register(plugin), "NETWORK_PUSHER");
+        registerSafely(plugin, () -> NETWORK_BEST_PUSHER.register(plugin), "NETWORK_BEST_PUSHER");
+        registerSafely(plugin, () -> NETWORK_CONTROL_X.register(plugin), "NETWORK_CONTROL_X");
+        registerSafely(plugin, () -> NETWORK_CONTROL_V.register(plugin), "NETWORK_CONTROL_V");
+        registerSafely(plugin, () -> NETWORK_VACUUM.register(plugin), "NETWORK_VACUUM");
+        registerSafely(plugin, () -> NETWORK_VANILLA_GRABBER.register(plugin), "NETWORK_VANILLA_GRABBER");
+        registerSafely(plugin, () -> NETWORK_VANILLA_PUSHER.register(plugin), "NETWORK_VANILLA_PUSHER");
+        registerSafely(plugin, () -> NETWORK_WIRELESS_TRANSMITTER.register(plugin), "NETWORK_WIRELESS_TRANSMITTER");
+        registerSafely(plugin, () -> NETWORK_WIRELESS_RECEIVER.register(plugin), "NETWORK_WIRELESS_RECEIVER");
+        registerSafely(plugin, () -> NETWORK_PURGER.register(plugin), "NETWORK_PURGER");
+        registerSafely(plugin, () -> NETWORK_GRID.register(plugin), "NETWORK_GRID");
+        registerSafely(plugin, () -> NETWORK_CRAFTING_GRID.register(plugin), "NETWORK_CRAFTING_GRID");
+        registerSafely(plugin, () -> NETWORK_CELL.register(plugin), "NETWORK_CELL");
+        registerSafely(plugin, () -> NETWORK_GREEDY_BLOCK.register(plugin), "NETWORK_GREEDY_BLOCK");
+        registerSafely(plugin, () -> NETWORK_QUANTUM_WORKBENCH.register(plugin), "NETWORK_QUANTUM_WORKBENCH");
+        registerSafely(plugin, () -> NETWORK_QUANTUM_STORAGE_1.register(plugin), "NETWORK_QUANTUM_STORAGE_1");
+        registerSafely(plugin, () -> NETWORK_QUANTUM_STORAGE_2.register(plugin), "NETWORK_QUANTUM_STORAGE_2");
+        registerSafely(plugin, () -> NETWORK_QUANTUM_STORAGE_3.register(plugin), "NETWORK_QUANTUM_STORAGE_3");
+        registerSafely(plugin, () -> NETWORK_QUANTUM_STORAGE_4.register(plugin), "NETWORK_QUANTUM_STORAGE_4");
+        registerSafely(plugin, () -> NETWORK_QUANTUM_STORAGE_5.register(plugin), "NETWORK_QUANTUM_STORAGE_5");
+        registerSafely(plugin, () -> NETWORK_QUANTUM_STORAGE_6.register(plugin), "NETWORK_QUANTUM_STORAGE_6");
+        registerSafely(plugin, () -> NETWORK_QUANTUM_STORAGE_7.register(plugin), "NETWORK_QUANTUM_STORAGE_7");
+        registerSafely(plugin, () -> NETWORK_QUANTUM_STORAGE_8.register(plugin), "NETWORK_QUANTUM_STORAGE_8");
+        registerSafely(plugin, () -> NETWORK_CAPACITOR_1.register(plugin), "NETWORK_CAPACITOR_1");
+        registerSafely(plugin, () -> NETWORK_CAPACITOR_2.register(plugin), "NETWORK_CAPACITOR_2");
+        registerSafely(plugin, () -> NETWORK_CAPACITOR_3.register(plugin), "NETWORK_CAPACITOR_3");
+        registerSafely(plugin, () -> NETWORK_CAPACITOR_4.register(plugin), "NETWORK_CAPACITOR_4");
+        registerSafely(plugin, () -> NETWORK_POWER_OUTLET_1.register(plugin), "NETWORK_POWER_OUTLET_1");
+        registerSafely(plugin, () -> NETWORK_POWER_OUTLET_2.register(plugin), "NETWORK_POWER_OUTLET_2");
+        registerSafely(plugin, () -> NETWORK_POWER_DISPLAY.register(plugin), "NETWORK_POWER_DISPLAY");
+        registerSafely(plugin, () -> NETWORK_RECIPE_ENCODER.register(plugin), "NETWORK_RECIPE_ENCODER");
+        registerSafely(plugin, () -> NETWORK_AUTO_CRAFTER.register(plugin), "NETWORK_AUTO_CRAFTER");
+        registerSafely(plugin, () -> NETWORK_AUTO_CRAFTER_WITHHOLDING.register(plugin), "NETWORK_AUTO_CRAFTER_WITHHOLDING");
+
+        registerSafely(plugin, () -> CRAFTING_BLUEPRINT.register(plugin), "CRAFTING_BLUEPRINT");
+        registerSafely(plugin, () -> NETWORK_PROBE.register(plugin), "NETWORK_PROBE");
+        registerSafely(plugin, () -> NETWORK_REMOTE.register(plugin), "NETWORK_REMOTE");
+        registerSafely(plugin, () -> NETWORK_REMOTE_EMPOWERED.register(plugin), "NETWORK_REMOTE_EMPOWERED");
+        registerSafely(plugin, () -> NETWORK_REMOTE_PRISTINE.register(plugin), "NETWORK_REMOTE_PRISTINE");
+        registerSafely(plugin, () -> NETWORK_REMOTE_ULTIMATE.register(plugin), "NETWORK_REMOTE_ULTIMATE");
+        registerSafely(plugin, () -> NETWORK_CRAYON.register(plugin), "NETWORK_CRAYON");
+        registerSafely(plugin, () -> NETWORK_CONFIGURATOR.register(plugin), "NETWORK_CONFIGURATOR");
+        registerSafely(plugin, () -> NETWORK_WIRELESS_CONFIGURATOR.register(plugin), "NETWORK_WIRELESS_CONFIGURATOR");
+        registerSafely(plugin, () -> NETWORK_RAKE_1.register(plugin), "NETWORK_RAKE_1");
+        registerSafely(plugin, () -> NETWORK_RAKE_2.register(plugin), "NETWORK_RAKE_2");
+        registerSafely(plugin, () -> NETWORK_RAKE_3.register(plugin), "NETWORK_RAKE_3");
+
+        registerSafely(plugin, () -> NETWORK_ADMIN_DEBUGGER.register(plugin), "NETWORK_ADMIN_DEBUGGER");
+    }
+
+    /**
+     * Helper sederhana untuk men-registrasi masing-masing item secara aman.
+     */
+    private static void registerSafely(Networks plugin, Runnable action, String name) {
+        try {
+            plugin.getLogger().fine("[DBG] Registering item " + name);
+            action.run();
+            plugin.getLogger().info("[DBG] Registered item " + name);
+        } catch (Throwable t) {
+            plugin.getLogger().severe("[ERR] Failed to register item " + name + " : " + t.getMessage());
+            t.printStackTrace();
+        }
     }
 }
