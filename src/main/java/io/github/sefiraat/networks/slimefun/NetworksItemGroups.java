@@ -72,6 +72,14 @@ public final class NetworksItemGroups {
             )
     );
 
+    public static final DummyItemGroup NETWORK_TEST = new DummyItemGroup(
+            Keys.newKey("more_network_bridge"),
+            ItemCreator.create(
+                    new ItemStack(Material.PINK_STAINED_GLASS),
+                    Theme.MAIN.getColor() + "Network Test"
+            )
+    );
+
     public static final ItemGroup DISABLED_ITEMS = new HiddenItemGroup(
             Keys.newKey("disabled_items"),
             ItemCreator.create(

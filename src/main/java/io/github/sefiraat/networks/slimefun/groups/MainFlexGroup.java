@@ -21,7 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Flex guide utama untuk Networks.
+ * @noinspection deprecation
  */
 public class MainFlexGroup extends FlexItemGroup {
 
@@ -42,8 +42,12 @@ public class MainFlexGroup extends FlexItemGroup {
     private static final int NETWORK_QUANTUMS = 13;
     private static final int MORE_NETWORK_BRIDGE = 14;
 
-    private static final int[] HEADER = new int[]{ 0,1,2,3,4,5,6,7,8 };
-    private static final int[] FOOTER = new int[]{ 45,46,47,48,49,50,51,52,53 };
+    private static final int[] HEADER = new int[]{
+            0, 1, 2, 3, 4, 5, 6, 7, 8
+    };
+    private static final int[] FOOTER = new int[]{
+            45, 46, 47, 48, 49, 50, 51, 52, 53
+    };
 
     public MainFlexGroup(NamespacedKey key, ItemStack item) {
         super(key, item);
@@ -96,6 +100,7 @@ public class MainFlexGroup extends FlexItemGroup {
         // Docs
         menu.replaceExistingItem(DOCS, DOCS_ITEM_STACK);
         menu.addMenuClickHandler(DOCS, (player1, i1, itemStack1, clickAction) -> {
+            // Use Adventure Component for clickable text
             Component link = Component.text("To access the documentation Wiki, please click here")
                     .color(NamedTextColor.YELLOW)
                     .clickEvent(ClickEvent.openUrl("https://sefiraat.dev/"));
@@ -126,7 +131,6 @@ public class MainFlexGroup extends FlexItemGroup {
         menu.addMenuClickHandler(NETWORK_QUANTUMS, (player1, i1, itemStack1, clickAction) ->
                 openPage(profile, NetworksItemGroups.NETWORK_QUANTUMS, mode, 1)
         );
-
         // More Network Bridge
         menu.replaceExistingItem(MORE_NETWORK_BRIDGE, NetworksItemGroups.MORE_NETWORK_BRIDGE.getItem(player));
         menu.addMenuClickHandler(MORE_NETWORK_BRIDGE, (player1, i1, itemStack1, clickAction) ->
@@ -137,7 +141,6 @@ public class MainFlexGroup extends FlexItemGroup {
     @ParametersAreNonnullByDefault
     public boolean openPage(PlayerProfile profile, ItemGroup itemGroup, SlimefunGuideMode mode, int page) {
         profile.getGuideHistory().add(this, 1);
-        // Memanggil static helper openItemGroup yang ada di API Slimefun4
         SlimefunGuide.openItemGroup(profile, itemGroup, mode, page);
         return false;
     }
