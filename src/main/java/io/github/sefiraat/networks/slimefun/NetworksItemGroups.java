@@ -4,7 +4,6 @@ import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.slimefun.groups.DummyItemGroup;
 import io.github.sefiraat.networks.slimefun.groups.MainFlexGroup;
 import io.github.sefiraat.networks.utils.ItemCreator;
-import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.Theme;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import lombok.experimental.UtilityClass;
@@ -42,38 +41,39 @@ public final class NetworksItemGroups {
         return it;
     }
 
+    // NOTE: menggunakan NamespacedKey(Networks.getInstance(), "...") untuk memastikan namespace konsisten
     public static final MainFlexGroup MAIN = new MainFlexGroup(
-            Keys.newKey("main"),
+            new NamespacedKey(Networks.getInstance(), "main"),
             mk(Material.CHORUS_FLOWER, Theme.applyThemeToString(Theme.MAIN, "Networks V2"))
     );
 
     public static final DummyItemGroup MATERIALS = new DummyItemGroup(
-            Keys.newKey("materials"),
+            new NamespacedKey(Networks.getInstance(), "materials"),
             mk(Material.WHITE_STAINED_GLASS, Theme.applyThemeToString(Theme.MAIN, "Crafting Materials"))
     );
 
     public static final DummyItemGroup TOOLS = new DummyItemGroup(
-            Keys.newKey("tools"),
+            new NamespacedKey(Networks.getInstance(), "tools"),
             mk(Material.PAINTING, Theme.applyThemeToString(Theme.MAIN, "Network Management Tools"))
     );
 
     public static final DummyItemGroup NETWORK_ITEMS = new DummyItemGroup(
-            Keys.newKey("network_items"),
+            new NamespacedKey(Networks.getInstance(), "network_items"),
             mk(Material.BLACK_STAINED_GLASS, Theme.applyThemeToString(Theme.MAIN, "Network Items"))
     );
 
     public static final DummyItemGroup NETWORK_QUANTUMS = new DummyItemGroup(
-            Keys.newKey("network_quantums"),
+            new NamespacedKey(Networks.getInstance(), "network_quantums"),
             mk(Material.WHITE_TERRACOTTA, Theme.applyThemeToString(Theme.MAIN, "Network Quantum Storage Devices"))
     );
 
     public static final DummyItemGroup MORE_NETWORK_BRIDGE = new DummyItemGroup(
-            Keys.newKey("more_network_bridge"),
+            new NamespacedKey(Networks.getInstance(), "more_network_bridge"),
             mk(Material.PINK_STAINED_GLASS, Theme.applyThemeToString(Theme.MAIN, "More Network Bridge"))
     );
 
     public static final ItemGroup DISABLED_ITEMS = new HiddenItemGroup(
-            Keys.newKey("disabled_items"),
+            new NamespacedKey(Networks.getInstance(), "disabled_items"),
             mk(Material.BARRIER, Theme.applyThemeToString(Theme.MAIN, "Disabled/Removed Items"))
     );
 
