@@ -22,7 +22,9 @@ import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -33,6 +35,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.*;
 
@@ -63,17 +67,29 @@ public abstract class AbstractGrid extends NetworkObject {
             Theme.CLICK_INFO.getColor() + "Set Filter (Right Click to Clear)"
     );
 
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+    private static final PlainTextComponentSerializer PLAIN = PlainTextComponentSerializer.plainText();
+
     private static final Comparator<Map.Entry<ItemStack, Integer>> ALPHABETICAL_SORT = Comparator.comparing(
             itemStackIntegerEntry -> {
                 ItemStack itemStack = itemStackIntegerEntry.getKey();
                 SlimefunItem slimefunItem = SlimefunItem.getByItem(itemStack);
                 if (slimefunItem != null) {
-                    return ChatColor.stripColor(slimefunItem.getItemName());
+                    // Slimefun item name is usually a String; try to convert safely via Adventure if possible
+                    try {
+                        // Slimefun API returns plain String name; strip color codes if present using legacy serializer
+                        return PLAIN.serialize(LEGACY.deserialize(slimefunItem.getItemName()));
+                    } catch (Throwable ignored) {
+                        return slimefunItem.getItemName();
+                    }
                 } else {
                     ItemMeta itemMeta = itemStackIntegerEntry.getKey().getItemMeta();
-                    return itemMeta.hasDisplayName()
-                            ? ChatColor.stripColor(itemMeta.getDisplayName())
-                            : itemStackIntegerEntry.getKey().getType().name();
+                    if (itemMeta != null && hasDisplayNameSafe(itemMeta)) {
+                        String display = getPlainDisplayNameSafe(itemMeta);
+                        return display != null ? display : itemStackIntegerEntry.getKey().getType().name();
+                    } else {
+                        return itemStackIntegerEntry.getKey().getType().name();
+                    }
                 }
             }
     );
@@ -159,7 +175,7 @@ public abstract class AbstractGrid extends NetworkObject {
         // Update Screen
         final NetworkRoot root = definition.getNode().getRoot();
         final GridCache gridCache = getCacheMap().get(blockMenu.getLocation().clone());
-        final List<Map.Entry<ItemStack, Integer>> entries = getEntries(root, gridCache); // size是0，点F7，步入getEnt
+        final List<Map.Entry<ItemStack, Integer>> entries = getEntries(root, gridCache);
         final int pages = (int) Math.ceil(entries.size() / (double) getDisplaySlots().length) - 1;
 
         gridCache.setMaxPages(pages);
@@ -186,15 +202,39 @@ public abstract class AbstractGrid extends NetworkObject {
                 final Map.Entry<ItemStack, Integer> entry = validEntries.get(i);
                 final ItemStack displayStack = entry.getKey().clone();
                 final ItemMeta itemMeta = displayStack.getItemMeta();
-                List<String> lore = itemMeta.getLore();
 
-                if (lore == null) {
-                    lore = getLoreAddition(entry.getValue());
-                } else {
-                    lore.addAll(getLoreAddition(entry.getValue()));
+                // Obtain existing lore safely (component-first, fallback reflection)
+                List<String> legacyLore = null;
+                try {
+                    List<Component> comps = itemMeta.lore();
+                    if (comps != null) {
+                        legacyLore = new ArrayList<>(comps.size());
+                        for (Component c : comps) legacyLore.add(LEGACY.serialize(c));
+                    }
+                } catch (NoSuchMethodError | NoClassDefFoundError ignored) { /* fallback below */ }
+
+                if (legacyLore == null) {
+                    List<String> maybe = invokeGetLore(itemMeta);
+                    legacyLore = maybe != null ? new ArrayList<>(maybe) : new ArrayList<>();
                 }
 
-                itemMeta.setLore(lore);
+                if (legacyLore.isEmpty()) {
+                    legacyLore = getLoreAddition(entry.getValue());
+                } else {
+                    legacyLore.addAll(getLoreAddition(entry.getValue()));
+                }
+
+                // write back: prefer Component-based set, else reflective setLore
+                try {
+                    // convert legacy strings to Components and set via new API
+                    List<Component> comps = new ArrayList<>(legacyLore.size());
+                    for (String s : legacyLore) comps.add(LEGACY.deserialize(s));
+                    itemMeta.lore(comps);
+                } catch (NoSuchMethodError | NoClassDefFoundError e) {
+                    // fallback: reflective setLore
+                    invokeSetLore(itemMeta, legacyLore);
+                }
+
                 displayStack.setItemMeta(itemMeta);
                 blockMenu.replaceExistingItem(getDisplaySlots()[i], displayStack);
                 blockMenu.addMenuClickHandler(getDisplaySlots()[i], (player, slot, item, action) -> {
@@ -217,7 +257,7 @@ public abstract class AbstractGrid extends NetworkObject {
 
     @Nonnull
     protected List<Map.Entry<ItemStack, Integer>> getEntries(@Nonnull NetworkRoot networkRoot, @Nonnull GridCache cache) {
-        return networkRoot.getAllNetworkItems().entrySet().stream() // getAllNetworkItems 是0，再点F7，步入
+        return networkRoot.getAllNetworkItems().entrySet().stream()
                 .filter(entry -> {
                     if (cache.getFilter() == null) {
                         return true;
@@ -227,8 +267,9 @@ public abstract class AbstractGrid extends NetworkObject {
                     String name = itemStack.getType().name().toLowerCase(Locale.ROOT);
                     if (itemStack.hasItemMeta()) {
                         final ItemMeta itemMeta = itemStack.getItemMeta();
-                        if (itemMeta.hasDisplayName()) {
-                            name = ChatColor.stripColor(itemMeta.getDisplayName().toLowerCase(Locale.ROOT));
+                        if (itemMeta != null && hasDisplayNameSafe(itemMeta)) {
+                            String plain = getPlainDisplayNameSafe(itemMeta);
+                            if (plain != null) name = plain.toLowerCase(Locale.ROOT);
                         }
                     }
                     return name.contains(cache.getFilter());
@@ -263,11 +304,39 @@ public abstract class AbstractGrid extends NetworkObject {
 
         final ItemStack clone = itemStack.clone();
         final ItemMeta cloneMeta = clone.getItemMeta();
-        final List<String> cloneLore = cloneMeta.getLore();
 
-        cloneLore.remove(cloneLore.size() - 1);
-        cloneLore.remove(cloneLore.size() - 1);
-        cloneMeta.setLore(cloneLore);
+        // get lore safely (component-first -> reflective)
+        List<String> cloneLore = null;
+        try {
+            List<Component> comps = cloneMeta.lore();
+            if (comps != null) {
+                cloneLore = new ArrayList<>(comps.size());
+                for (Component c : comps) cloneLore.add(LEGACY.serialize(c));
+            }
+        } catch (NoSuchMethodError | NoClassDefFoundError ignored) { /* fallback */ }
+
+        if (cloneLore == null) {
+            List<String> maybe = invokeGetLore(cloneMeta);
+            cloneLore = maybe != null ? new ArrayList<>(maybe) : new ArrayList<>();
+        }
+
+        // remove last two lore lines (assumes there are at least two; guard)
+        if (!cloneLore.isEmpty()) {
+            int removeCount = Math.min(2, cloneLore.size());
+            for (int i = 0; i < removeCount; i++) {
+                cloneLore.remove(cloneLore.size() - 1);
+            }
+        }
+
+        // write lore back safely
+        try {
+            List<Component> comps = new ArrayList<>(cloneLore.size());
+            for (String s : cloneLore) comps.add(LEGACY.deserialize(s));
+            cloneMeta.lore(comps);
+        } catch (NoSuchMethodError | NoClassDefFoundError e) {
+            invokeSetLore(cloneMeta, cloneLore);
+        }
+
         clone.setItemMeta(cloneMeta);
         int amount = 1;
 
@@ -381,7 +450,7 @@ public abstract class AbstractGrid extends NetworkObject {
         receiveItem(definition.getNode().getRoot(), player, itemStack, action, blockMenu);
     }
 
-    @SuppressWarnings({"unused"})
+    // @SuppressWarnings({"unused"})
     public void receiveItem(
             NetworkRoot root,
             Player player,
@@ -397,6 +466,77 @@ public abstract class AbstractGrid extends NetworkObject {
 
         if (itemStack != null && itemStack.getType() != Material.AIR) {
             root.addItemStack0(blockMenu.getLocation(), itemStack);
+        }
+    }
+
+    /* ---------------- reflection helpers (local to this file) ---------------- */
+
+    @Nullable
+    private static List<String> invokeGetLore(ItemMeta meta) {
+        try {
+            Method m = meta.getClass().getMethod("getLore");
+            Object res = m.invoke(meta);
+            if (res instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<String> list = (List<String>) res;
+                return list;
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+        } catch (SecurityException ignored) {
+        }
+        return null;
+    }
+
+    private static void invokeSetLore(ItemMeta meta, List<String> lore) {
+        try {
+            Method m = meta.getClass().getMethod("setLore", List.class);
+            m.invoke(meta, lore);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+        } catch (SecurityException ignored) {
+        }
+    }
+
+    @Nullable
+    private static String invokeGetDisplayName(ItemMeta meta) {
+        try {
+            Method m = meta.getClass().getMethod("getDisplayName");
+            Object res = m.invoke(meta);
+            if (res instanceof String) {
+                return (String) res;
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+        } catch (SecurityException ignored) {
+        }
+        return null;
+    }
+
+    @Nullable
+    private static String getPlainDisplayNameSafe(ItemMeta meta) {
+        try {
+            Component comp = meta.displayName();
+            if (comp != null) {
+                return PLAIN.serialize(comp);
+            }
+        } catch (NoSuchMethodError | NoClassDefFoundError e) {
+            // fallback to reflective legacy
+        }
+
+        String legacy = invokeGetDisplayName(meta);
+        if (legacy != null) {
+            try {
+                return PLAIN.serialize(LEGACY.deserialize(legacy));
+            } catch (Throwable ignored) {
+            }
+        }
+        return null;
+    }
+
+    private static boolean hasDisplayNameSafe(ItemMeta meta) {
+        try {
+            return meta.hasDisplayName();
+        } catch (NoSuchMethodError | NoClassDefFoundError e) {
+            String legacy = invokeGetDisplayName(meta);
+            return legacy != null && !legacy.isEmpty();
         }
     }
 }

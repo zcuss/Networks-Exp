@@ -1,3 +1,4 @@
+// (Ganti seluruh isi NetworkQuantumStorage.java dengan file ini)
 package io.github.sefiraat.networks.slimefun.network;
 
 import io.github.sefiraat.networks.network.stackcaches.ItemStackCache;
@@ -26,6 +27,9 @@ import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
@@ -40,10 +44,17 @@ import org.bukkit.inventory.meta.ItemMeta;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveItem {
 
@@ -109,6 +120,21 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
 
     private static final Map<Location, QuantumCache> CACHES = new HashMap<>();
 
+    // Legacy serializer helper
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+
+    // IDs / kata kunci yang tidak boleh diset sebagai item quantum (digunakan sebagai fallback nama)
+    private static final Set<String> BLOCKED_IDS = new HashSet<>(Arrays.asList(
+            "BASIC_STORAGE",
+            "ADVANCED_STORAGE",
+            "REINFORCED_STORAGE",
+            "VOID_STORAGE",
+            "INFINITY_STORAGE",
+            "QUANTUM",
+            "QUANTUM_STORAGE",
+            "INFINITY_STORAGE"
+    ));
+
     static {
         final ItemMeta itemMeta = NO_ITEM.getItemMeta();
         PersistentDataAPI.setBoolean(itemMeta, Keys.newKey("display"), true);
@@ -145,12 +171,121 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
         syncBlock(location, cache);
     }
 
-    private static boolean isBlacklisted(@Nonnull ItemStack itemStack) {
-        return itemStack.getType() == Material.AIR
-                || itemStack.getType().getMaxDurability() < 0
-                || Tag.SHULKER_BOXES.isTagged(itemStack.getType())
-                || SlimefunItem.getByItem(itemStack) instanceof NetworkQuantumStorage;
+    /**
+     * Ambil display name plain (kompatibel component & legacy).
+     * Kembalikan uppercase trimmed.
+     */
+    private static String getDisplayNamePlain(@Nullable ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return "";
+        try {
+            ItemMeta meta = item.getItemMeta();
+
+            // 1) try Adventure API displayName() via refleksi
+            try {
+                Method m = meta.getClass().getMethod("displayName");
+                Object comp = m.invoke(meta);
+                if (comp instanceof Component) {
+                    String s = LEGACY.serialize((Component) comp);
+                    return s == null ? "" : s.trim().toUpperCase();
+                }
+            } catch (NoSuchMethodException ignored) {
+            } catch (Throwable ignored) {
+            }
+
+            // 2) try reflective getDisplayName() if available (avoid direct deprecated call)
+            try {
+                Method gm = meta.getClass().getMethod("getDisplayName");
+                Object res = gm.invoke(meta);
+                if (res instanceof String) {
+                    return Objects.toString(res, "").trim().toUpperCase();
+                }
+            } catch (NoSuchMethodException ignored) {
+            } catch (Throwable ignored) {
+            }
+
+            // 3) last resort: no display name accessible
+        } catch (Throwable ignored) {
+        }
+        return "";
     }
+
+    /**
+     * Perketat isBlacklisted -> public supaya class lain bisa memanggil.
+     * Menolak shulker, air, durability aneh, item quantum/slimefun specific (instance),
+     * atau nama yang mengandung kata terlarang (fallback).
+     */
+    public static boolean isBlacklisted(@Nullable ItemStack itemStack) {
+        if (itemStack == null) return true;
+
+        try {
+            if (itemStack.getType() == Material.AIR) return true;
+        } catch (Throwable ignored) {}
+
+        try {
+            if (itemStack.getType().getMaxDurability() < 0) return true;
+        } catch (Throwable ignored) {}
+
+        try {
+            if (Tag.SHULKER_BOXES.isTagged(itemStack.getType())) return true;
+        } catch (Throwable ignored) {}
+
+        // 1) If Slimefun item and is actual NetworkQuantumStorage instance -> block
+        try {
+            SlimefunItem sf = SlimefunItem.getByItem(itemStack);
+            if (sf != null) {
+                if (sf instanceof NetworkQuantumStorage) {
+                    Bukkit.getLogger().finer("[QuantumBlocker] Blocked by instance check (NetworkQuantumStorage).");
+                    return true;
+                }
+
+                // 2) Try to inspect Slimefun item id (safer than relying on display name)
+                try {
+                    Method getIdMethod = sf.getClass().getMethod("getId");
+                    Object idObj = getIdMethod.invoke(sf);
+                    if (idObj instanceof String) {
+                        String sfId = ((String) idObj).toUpperCase(Locale.ROOT);
+                        for (String bid : BLOCKED_IDS) {
+                            if (sfId.contains(bid)) {
+                                Bukkit.getLogger().finer("[QuantumBlocker] Blocked by Slimefun item id match: " + sfId + " contains " + bid);
+                                return true;
+                            }
+                        }
+                    }
+                } catch (NoSuchMethodException ignored) {
+                    // getId may not exist on some versions; ignore and fallback to name checks
+                } catch (Throwable t) {
+                    Bukkit.getLogger().finer("[QuantumBlocker] Error while checking Slimefun id: " + t.getMessage());
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // 3) Fallback: check display name (component-aware) in both "space" and "underscore" normalized forms
+        try {
+            String plain = getDisplayNamePlain(itemStack); // already uppercase
+            if (plain != null && !plain.isEmpty()) {
+                // normalisasi: ubah semua non-Alnum jadi underscore
+                String normalized = plain.replaceAll("[^A-Z0-9]", "_");
+                // juga buat versi tanpa underscore (bersihkan ganda)
+                normalized = normalized.replaceAll("_+", "_").trim();
+
+                for (String bid : BLOCKED_IDS) {
+                    // periksa:
+                    //  - apakah plain (dgn spasi) mengandung kata,
+                    //  - apakah normalized (underscore) mengandung kata,
+                    //  - apakah plain mengandung kata tanpa underscore (coba juga replace '_' -> ' ')
+                    String bidPlain = bid.replace('_', ' '); // contoh BASIC_STORAGE -> "BASIC STORAGE"
+                    if (plain.contains(bid) || plain.contains(bidPlain) || normalized.contains(bid)) {
+                        Bukkit.getLogger().finer("[QuantumBlocker] Blocked by name check: plain='" + plain + "' normalized='" + normalized + "' matched '" + bid + "'");
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        return false;
+    }
+
+
 
     @ParametersAreNonnullByDefault
     @Nullable
@@ -203,7 +338,10 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
         } else {
             final ItemStack itemStack = cache.getItemStack().clone();
             final ItemMeta itemMeta = itemStack.getItemMeta();
-            final List<String> lore = itemMeta.hasLore() ? itemMeta.getLore() : new ArrayList<>();
+
+            List<String> lore = safeGetLore(itemMeta);
+            if (lore == null) lore = new ArrayList<>();
+
             lore.add("");
             lore.add(Theme.CLICK_INFO + "Voiding: " + Theme.PASSIVE + StringUtils.toTitleCase(String.valueOf(cache.isVoidExcess())));
             lore.add(Theme.CLICK_INFO + "Amount: " + Theme.PASSIVE + cache.getAmount());
@@ -212,7 +350,8 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
                 // The player could set the custom maximum amount to be the actual maximum amount
                 lore.add(Theme.CLICK_INFO + "Capacity: " + Theme.SUCCESS + cache.getLimit());
             }
-            itemMeta.setLore(lore);
+
+            safeSetLore(itemMeta, lore.isEmpty() ? null : lore);
             itemStack.setItemMeta(itemMeta);
             itemStack.setAmount(1);
             menu.replaceExistingItem(ITEM_SLOT, itemStack);
@@ -237,6 +376,7 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
 
     public static void setItem(@Nonnull BlockMenu blockMenu, @Nonnull ItemStack itemStack, @Nonnull int amount) {
         if (isBlacklisted(itemStack)) {
+            Bukkit.getLogger().info("[Networks] Prevented programmatic setItem of blacklisted item at " + blockMenu.getLocation());
             return;
         }
 
@@ -335,9 +475,15 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
     }
 
     private void setItem(@Nonnull BlockMenu blockMenu, @Nonnull Player player) {
+        if (player.getItemOnCursor() == null || player.getItemOnCursor().getType() == Material.AIR) {
+            player.sendMessage(Theme.WARNING + "You must hold an item to register.");
+            return;
+        }
+
         final ItemStack itemStack = player.getItemOnCursor().clone();
 
         if (isBlacklisted(itemStack)) {
+            player.sendMessage(Theme.ERROR + "That item cannot be registered into Quantum Storage.");
             return;
         }
 
@@ -491,6 +637,9 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
             ItemStack item = contents[i];
             if (item == null || item.getType() == Material.AIR) continue;
 
+            // skip blacklisted items
+            if (isBlacklisted(item)) continue;
+
             ItemStackCache storedItemCache = new ItemStackCache(storedItem);
 
 
@@ -563,7 +712,8 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
         final boolean voidExcess = voidString == null || Boolean.parseBoolean(voidString);
         int maxAmount = this.maxAmount;
         if (this.supportsCustomMaxAmount) {
-            final String customMaxAmountString = BlockStorage.getLocationInfo(blockMenu.getLocation(), BS_CUSTOM_MAX_AMOUNT);
+            final String customMaxAmountString =
+                    BlockStorage.getLocationInfo(blockMenu.getLocation(), BS_CUSTOM_MAX_AMOUNT);
             if (customMaxAmountString != null) {
                 maxAmount = Integer.parseInt(customMaxAmountString);
             }
@@ -584,11 +734,12 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
         } else {
             final ItemStack clone = itemStack.clone();
             final ItemMeta itemMeta = clone.getItemMeta();
-            final List<String> lore = itemMeta.getLore();
-            for (int i = 0; i < 3; i++) {
-                if (lore != null && lore.size() == 0) {
-                    break;
-                }
+
+            List<String> lore = safeGetLore(itemMeta);
+            if (lore == null) lore = new ArrayList<>();
+
+            // remove up to 3 trailing lines (original code tried to remove 3 lines)
+            for (int i = 0; i < 3 && !lore.isEmpty(); i++) {
                 lore.remove(lore.size() - 1);
             }
 
@@ -597,7 +748,7 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
                     lore.remove(lore.size() - 1);
                 }
             }
-            itemMeta.setLore(lore.isEmpty() ? null : lore);
+            safeSetLore(itemMeta, lore.isEmpty() ? null : lore);
             clone.setItemMeta(itemMeta);
 
             final QuantumCache cache = new QuantumCache(clone, amount, maxAmount, voidExcess, this.supportsCustomMaxAmount);
@@ -655,5 +806,85 @@ public class NetworkQuantumStorage extends SlimefunItem implements DistinctiveIt
     @Override
     public boolean canStack(@Nonnull ItemMeta sfItemMeta, @Nonnull ItemMeta itemMeta) {
         return sfItemMeta.getPersistentDataContainer().equals(itemMeta.getPersistentDataContainer());
+    }
+
+    /* ------------------- Helpers for safe lore access (component-friendly) ------------------- */
+
+    /**
+     * Try to obtain ItemMeta lore as legacy strings:
+     * - Prefer Adventure-based ItemMeta.lore() -> convert Components to legacy strings
+     * - Fallback to reflective getLore() which returns List<String> on older implementations
+     */
+    @Nullable
+    private static List<String> safeGetLore(@Nonnull ItemMeta meta) {
+        try {
+            // try Adventure API: meta.lore() -> List<Component>
+            Method m = meta.getClass().getMethod("lore");
+            Object res = m.invoke(meta);
+            if (res instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Component> comps = (List<Component>) res;
+                List<String> out = new ArrayList<>(comps.size());
+                for (Component c : comps) {
+                    out.add(LEGACY.serialize(c));
+                }
+                return out;
+            }
+        } catch (NoSuchMethodException ignored) {
+            // try fallback below
+        } catch (IllegalAccessException | InvocationTargetException ignored) {
+        } catch (NoClassDefFoundError ignored) {
+        }
+
+        // fallback to reflective getLore() returning List<String>
+        try {
+            Method gm = meta.getClass().getMethod("getLore");
+            Object res = gm.invoke(meta);
+            if (res instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<String> list = (List<String>) res;
+                return new ArrayList<>(list);
+            }
+        } catch (NoSuchMethodException ignored) {
+        } catch (IllegalAccessException | InvocationTargetException ignored) {
+        } catch (NoClassDefFoundError ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * Safe setter: prefer Adventure Component-based lore (meta.lore(List<Component>))
+     * then fallback to reflective setLore(List<String>) for older APIs.
+     * Pass null to clear lore.
+     */
+    private static void safeSetLore(@Nonnull ItemMeta meta, @Nullable List<String> legacyLines) {
+        // try Adventure API first
+        try {
+            Method loreMethod = meta.getClass().getMethod("lore", List.class);
+            if (legacyLines == null) {
+                loreMethod.invoke(meta, (Object) null);
+                return;
+            }
+            List<Component> comps = new ArrayList<>(legacyLines.size());
+            for (String s : legacyLines) {
+                comps.add(LEGACY.deserialize(s));
+            }
+            loreMethod.invoke(meta, comps);
+            return;
+        } catch (NoSuchMethodException ignored) {
+            // fallback to setLore
+        } catch (IllegalAccessException | InvocationTargetException ignored) {
+        } catch (NoClassDefFoundError ignored) {
+        }
+
+        // fallback: reflective setLore(List<String>)
+        try {
+            Method setLore = meta.getClass().getMethod("setLore", List.class);
+            setLore.invoke(meta, legacyLines);
+            return;
+        } catch (NoSuchMethodException ignored) {
+        } catch (IllegalAccessException | InvocationTargetException ignored) {
+        } catch (NoClassDefFoundError ignored) {
+        }
     }
 }

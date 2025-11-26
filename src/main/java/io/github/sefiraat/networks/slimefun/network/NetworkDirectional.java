@@ -24,6 +24,8 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import net.md_5.bungee.api.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -41,6 +43,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 public abstract class NetworkDirectional extends NetworkObject {
@@ -65,6 +69,9 @@ public abstract class NetworkDirectional extends NetworkObject {
     private static final Map<Location, BlockFace> SELECTED_DIRECTION_MAP = new HashMap<>();
 
     private final ItemSetting<Integer> tickRate;
+
+    // serializer untuk mengubah antara legacy & adventure
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
 
     protected NetworkDirectional(ItemGroup itemGroup, SlimefunItemStack item, RecipeType recipeType, ItemStack[] recipe, NodeType type) {
         super(itemGroup, item, recipeType, recipe, type);
@@ -120,10 +127,13 @@ public abstract class NetworkDirectional extends NetworkObject {
             itemMeta.addEnchant(XEnchantment.LUCK_OF_THE_SEA.get(), 1, true);
             itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
-        itemMeta.setLore(List.of(
+
+        List<String> lore = List.of(
                 Theme.CLICK_INFO + "Left Click: " + Theme.PASSIVE + "Set Direction",
                 Theme.CLICK_INFO + "Shift Left Click: " + Theme.PASSIVE + "Open Target Block"
-        ));
+        );
+
+        safeSetLore(itemMeta, lore);
         displayStack.setItemMeta(itemMeta);
         return displayStack;
     }
@@ -140,10 +150,13 @@ public abstract class NetworkDirectional extends NetworkObject {
                 itemMeta.addEnchant(XEnchantment.LUCK_OF_THE_SEA.get(), 1, true);
                 itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
-            itemMeta.setLore(List.of(
+
+            List<String> lore = List.of(
                     Theme.CLICK_INFO + "Left Click: " + Theme.PASSIVE + "Set Direction",
                     Theme.CLICK_INFO + "Shift Left Click: " + Theme.PASSIVE + "Open Target Block"
-            ));
+            );
+
+            safeSetLore(itemMeta, lore);
             displayStack.setItemMeta(itemMeta);
             return displayStack;
         } else {
@@ -152,6 +165,42 @@ public abstract class NetworkDirectional extends NetworkObject {
                     material,
                     ChatColor.GRAY + "Set direction: " + blockFace.name()
             );
+        }
+    }
+
+    /**
+     * Safe lore setter:
+     * - Jika server menyediakan ItemMeta.lore(List<Component>) (Adventure), gunakan itu.
+     * - Jika tidak (lama/bukkit impl), fallback ke refleksi memanggil setLore(List<String>).
+     */
+    private static void safeSetLore(ItemMeta meta, List<String> legacyLines) {
+        if (meta == null) return;
+
+        // coba pakai API component jika tersedia
+        try {
+            List<Component> comps = new ArrayList<>(legacyLines.size());
+            for (String s : legacyLines) {
+                // konversi legacy (dengan &/§ color codes) ke Component
+                comps.add(LEGACY.deserialize(s));
+            }
+            // panggil meta.lore(List<Component>)
+            Method loreMethod = meta.getClass().getMethod("lore", List.class);
+            loreMethod.invoke(meta, comps);
+            return;
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoClassDefFoundError ignored) {
+            // fallback ke refleksi setLore(List<String>)
+        } catch (Throwable ignored) {
+            // jika ada masalah lain, tetap coba refleksi
+        }
+
+        // fallback: setLore(List<String>) via reflection (untuk versi Bukkit lama)
+        try {
+            Method m = meta.getClass().getMethod("setLore", List.class);
+            m.invoke(meta, legacyLines);
+            return;
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoClassDefFoundError ignored) {
+            // nothing we can do; swallow
+        } catch (Throwable ignored) {
         }
     }
 

@@ -18,17 +18,12 @@ import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.blocks.BlockPosition;
 import io.github.thebusybiscuit.slimefun4.utils.tags.SlimefunTag;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.craftbukkit.block.CraftBlock;
-import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
@@ -36,6 +31,9 @@ import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * NetworkControlV optimizations for paste behavior.
+ */
 public class NetworkControlV extends NetworkDirectional {
 
     public static final ItemStack TEMPLATE_BACKGROUND_STACK = ItemCreator.create(
@@ -75,80 +73,58 @@ public class NetworkControlV extends NetworkDirectional {
 
     private void tryPasteBlock(@Nonnull BlockMenu blockMenu) {
         final NodeDefinition definition = NetworkStorage.getAllNetworkObjects().get(blockMenu.getLocation());
+        if (definition == null || definition.getNode() == null) return;
 
-        if (definition == null || definition.getNode() == null) {
-            return;
-        }
-
-        if (definition.getNode().getRoot().getRootPower() < REQUIRED_POWER) {
-            return;
-        }
+        if (definition.getNode().getRoot().getRootPower() < REQUIRED_POWER) return;
 
         final BlockFace direction = getCurrentDirection(blockMenu);
-
-        if (direction == BlockFace.SELF) {
-            return;
-        }
+        if (direction == BlockFace.SELF) return;
 
         final Block targetBlock = blockMenu.getBlock().getRelative(direction);
         final BlockPosition targetPosition = new BlockPosition(targetBlock);
-
-        if (this.blockCache.contains(targetPosition)) {
-            return;
-        }
+        if (this.blockCache.contains(targetPosition)) return;
 
         final Material material = targetBlock.getType();
-
-        if (!material.isAir()) {
-            return;
-        }
+        if (!material.isAir()) return;
 
         final ItemStack templateStack = blockMenu.getItemInSlot(TEMPLATE_SLOT);
-
-        if (templateStack == null) {
-            return;
-        }
+        if (templateStack == null) return;
 
         final Material templateMaterial = templateStack.getType();
+        // Only allow placing blocks which are valid block materials and not sensitive/protected ones
+        if (!templateMaterial.isBlock() || SlimefunTag.SENSITIVE_MATERIALS.isTagged(templateMaterial)) return;
 
-        if (!templateMaterial.isBlock() || SlimefunTag.SENSITIVE_MATERIALS.isTagged(templateMaterial)) {
-            return;
-        }
-
+        // Don't allow Slimefun items to be pasted
         final SlimefunItem slimefunItem = SlimefunItem.getByItem(templateStack);
-
-        if (slimefunItem != null) {
-            return;
-        }
+        if (slimefunItem != null) return;
 
         final ItemRequest request = new ItemRequest(templateStack.clone(), 1);
         final ItemStack fetchedStack = definition.getNode().getRoot().getItemStack0(blockMenu.getLocation(), request);
 
-        if (fetchedStack == null || fetchedStack.getAmount() < 1) {
-            return;
-        }
+        if (fetchedStack == null || fetchedStack.getAmount() < 1) return;
 
-        CraftBlock cb = (CraftBlock) targetBlock;
-        LevelAccessor level = ((CraftBlock) targetBlock).getHandle();
-        BlockState bs = CraftMagicNumbers.getBlock(fetchedStack.getType()).defaultBlockState();
-        LevelLightEngine engine = level.getLightEngine();
-
+        // schedule the placement on the main thread but do minimal work here
         this.blockCache.add(targetPosition);
-        Bukkit.getScheduler().runTask(Networks.getInstance(), bukkitTask -> {
-            level.getMinecraftWorld().removeBlockEntity(cb.getPosition());
-            level.setBlock(cb.getPosition(), bs, 3);
-            engine.checkBlock(cb.getPosition());
+        Bukkit.getScheduler().runTask(Networks.getInstance(), () -> {
+            try {
+                // place the block (no physics)
+                targetBlock.setType(fetchedStack.getType(), false);
 
-            if (SupportedPluginManager.getInstance().isMcMMO()) {
-                mcMMO.getUserBlockTracker().setIneligible(targetBlock);
+                // mcMMO integration marking (cheap conditional)
+                if (SupportedPluginManager.getInstance().isMcMMO()) {
+                    mcMMO.getUserBlockTracker().setIneligible(targetBlock);
+                }
+
+                // Visual feedback: cheaper particle parameters
+                ParticleUtils.displayParticleRandomly(
+                        LocationUtils.centre(targetBlock.getLocation()),
+                        Particle.ELECTRIC_SPARK,
+                        1,
+                        3
+                );
+            } catch (Exception ex) {
+                Networks.getInstance().getLogger().warning("Failed placing pasted block: " + ex.getMessage());
             }
-
-            ParticleUtils.displayParticleRandomly(
-                    LocationUtils.centre(targetBlock.getLocation()),
-                    Particle.ELECTRIC_SPARK,
-                    1,
-                    5
-            );
         });
     }
 
@@ -170,43 +146,16 @@ public class NetworkControlV extends NetworkDirectional {
         return TEMPLATE_BACKGROUND_STACK;
     }
 
-    @Override
-    public int getNorthSlot() {
-        return NORTH_SLOT;
-    }
-
-    @Override
-    public int getSouthSlot() {
-        return SOUTH_SLOT;
-    }
-
-    @Override
-    public int getEastSlot() {
-        return EAST_SLOT;
-    }
-
-    @Override
-    public int getWestSlot() {
-        return WEST_SLOT;
-    }
-
-    @Override
-    public int getUpSlot() {
-        return UP_SLOT;
-    }
-
-    @Override
-    public int getDownSlot() {
-        return DOWN_SLOT;
-    }
-
-    @Override
-    public int[] getItemSlots() {
-        return new int[]{TEMPLATE_SLOT};
-    }
+    @Override public int getNorthSlot() { return NORTH_SLOT; }
+    @Override public int getSouthSlot() { return SOUTH_SLOT; }
+    @Override public int getEastSlot() { return EAST_SLOT; }
+    @Override public int getWestSlot() { return WEST_SLOT; }
+    @Override public int getUpSlot() { return UP_SLOT; }
+    @Override public int getDownSlot() { return DOWN_SLOT; }
+    @Override public int[] getItemSlots() { return new int[]{TEMPLATE_SLOT}; }
 
     @Override
     protected Particle.DustOptions getDustOptions() {
-        return new Particle.DustOptions(Color.MAROON, 1);
+        return new Particle.DustOptions(Color.MAROON, 1f);
     }
 }

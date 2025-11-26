@@ -31,6 +31,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Quantum Workbench with support for using quantum items as ingredient sources,
+ * and avoiding double-crafting / races by placing result deterministically.
+ */
 public class NetworkQuantumWorkbench extends SlimefunItem {
 
     private static final int[] BACKGROUND_SLOTS = {
@@ -110,71 +114,169 @@ public class NetworkQuantumWorkbench extends SlimefunItem {
     public void craft(@Nonnull BlockMenu menu) {
         final ItemStack itemInOutput = menu.getItemInSlot(OUTPUT_SLOT);
 
-        // Quick escape, we only allow crafting if the output is empty
-        if (itemInOutput != null) {
+        // only allow if output empty
+        if (itemInOutput != null && itemInOutput.getType() != Material.AIR) {
             return;
         }
 
         final ItemStack[] inputs = new ItemStack[RECIPE_SLOTS.length];
         int i = 0;
-
-        // Fill the inputs
         for (int recipeSlot : RECIPE_SLOTS) {
             ItemStack stack = menu.getItemInSlot(recipeSlot);
-            inputs[i] = stack;
+            inputs[i] = (stack == null ? null : stack.clone());
             i++;
+        }
+
+        // build effectiveInputs (unwrap quantum items)
+        final ItemStack[] effectiveInputs = new ItemStack[inputs.length];
+        for (int idx = 0; idx < inputs.length; idx++) {
+            ItemStack s = inputs[idx];
+            if (s == null) {
+                effectiveInputs[idx] = null;
+                continue;
+            }
+            boolean assigned = false;
+            try {
+                SlimefunItem sf = SlimefunItem.getByItem(s);
+                if (sf instanceof NetworkQuantumStorage) {
+                    try {
+                        ItemMeta im = s.getItemMeta();
+                        QuantumCache qc = DataTypeMethods.getCustom(im, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE);
+                        if (qc != null && qc.getItemStack() != null && qc.getAmount() > 0) {
+                            ItemStack base = qc.getItemStack().clone();
+                            base.setAmount(1);
+                            effectiveInputs[idx] = base;
+                            assigned = true;
+                        }
+                    } catch (Throwable ignored) {}
+                }
+            } catch (Throwable ignored) {}
+            if (!assigned) {
+                effectiveInputs[idx] = s.clone();
+                effectiveInputs[idx].setAmount(1);
+            }
         }
 
         ItemStack crafted = null;
 
-        // Go through each recipe, test and set the ItemStack if found
+        recipeLoop:
         for (Map.Entry<ItemStack[], ItemStack> entry : RECIPES.entrySet()) {
-            if (testRecipe(inputs, entry.getKey())) {
+            ItemStack[] recipeKey = entry.getKey();
+            if (recipeKey.length != effectiveInputs.length) continue;
+
+            boolean ok = true;
+            for (int t = 0; t < recipeKey.length; t++) {
+                ItemStack need = recipeKey[t];
+                ItemStack have = effectiveInputs[t];
+
+                if (!SlimefunUtils.isItemSimilar(have, need, true, false, false)) {
+                    ok = false;
+                    break;
+                }
+            }
+
+            if (ok) {
                 crafted = entry.getValue().clone();
-                break;
+                break recipeLoop;
             }
         }
 
         if (crafted != null) {
-            final ItemStack coreItem = inputs[4];
-            final SlimefunItem oldQuantum = SlimefunItem.getByItem(coreItem);
+            // ensure crafted result not already present (avoid double-craft)
+            boolean alreadyExists = false;
+            final int MENU_SIZE = 45; // typical BlockMenu size for this preset
+            for (int si = 0; si < MENU_SIZE; si++) {
+                try {
+                    ItemStack it = menu.getItemInSlot(si);
+                    if (it != null && it.getType() != Material.AIR) {
+                        if (SlimefunUtils.isItemSimilar(it, crafted, true, false, false)) {
+                            alreadyExists = true;
+                            break;
+                        }
+                    }
+                } catch (Throwable ignored) {}
+            }
+            if (alreadyExists) return;
+
+            // transfer quantum cache if core item is quantum
+            final ItemStack coreItem = inputs[4]; // center slot
+            final SlimefunItem oldQuantum = coreItem == null ? null : SlimefunItem.getByItem(coreItem);
 
             if (oldQuantum instanceof NetworkQuantumStorage) {
-                final ItemMeta oldMeta = coreItem.getItemMeta();
-                final ItemMeta newMeta = crafted.getItemMeta();
-                final NetworkQuantumStorage newQuantum = (NetworkQuantumStorage) SlimefunItem.getByItem(crafted);
-                final QuantumCache oldCache = DataTypeMethods.getCustom(oldMeta, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE);
+                try {
+                    final ItemMeta oldMeta = coreItem.getItemMeta();
+                    final ItemMeta newMeta = crafted.getItemMeta();
+                    final NetworkQuantumStorage newQuantum = (NetworkQuantumStorage) SlimefunItem.getByItem(crafted);
+                    final QuantumCache oldCache = DataTypeMethods.getCustom(oldMeta, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE);
 
-                if (oldCache != null) {
-                    final QuantumCache newCache = new QuantumCache(
-                            oldCache.getItemStack().clone(),
-                            oldCache.getAmount(),
-                            newQuantum.getMaxAmount(),
-                            oldCache.isVoidExcess(),
-                            newQuantum.supportsCustomMaxAmount()
-                    );
-                    DataTypeMethods.setCustom(newMeta, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE, newCache);
-                    newCache.addMetaLore(newMeta);
-                    crafted.setItemMeta(newMeta);
-                }
+                    if (oldCache != null) {
+                        final QuantumCache newCache = new QuantumCache(
+                                oldCache.getItemStack().clone(),
+                                oldCache.getAmount(),
+                                newQuantum.getMaxAmount(),
+                                oldCache.isVoidExcess(),
+                                newQuantum.supportsCustomMaxAmount()
+                        );
+                        DataTypeMethods.setCustom(newMeta, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE, newCache);
+                        newCache.addMetaLore(newMeta);
+                        crafted.setItemMeta(newMeta);
+                    }
+                } catch (Throwable ignored) {}
             }
 
-            menu.pushItem(crafted, OUTPUT_SLOT);
-            for (int recipeSlot : RECIPE_SLOTS) {
-                if (menu.getItemInSlot(recipeSlot) != null) {
+            // place crafted into output deterministically
+            ItemStack outBefore = menu.getItemInSlot(OUTPUT_SLOT);
+            if (outBefore == null || outBefore.getType() == Material.AIR) {
+                menu.replaceExistingItem(OUTPUT_SLOT, crafted.clone());
+            } else {
+                return; // someone filled it in the meantime
+            }
+
+            // re-check placed
+            ItemStack outNow = menu.getItemInSlot(OUTPUT_SLOT);
+            if (outNow == null || outNow.getType() == Material.AIR || !SlimefunUtils.isItemSimilar(outNow, crafted, true, false, false)) {
+                return; // failed to place
+            }
+
+            // consume ingredients AFTER successful placement
+            for (int slotIndex = 0; slotIndex < RECIPE_SLOTS.length; slotIndex++) {
+                int recipeSlot = RECIPE_SLOTS[slotIndex];
+                ItemStack slotItem = menu.getItemInSlot(recipeSlot);
+
+                if (slotItem == null || slotItem.getType() == Material.AIR) continue;
+
+                boolean consumed = false;
+
+                // If Quantum item, reduce its cached amount
+                try {
+                    SlimefunItem sf = SlimefunItem.getByItem(slotItem);
+                    if (sf instanceof NetworkQuantumStorage) {
+                        ItemMeta im = slotItem.getItemMeta();
+                        QuantumCache qc = DataTypeMethods.getCustom(im, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE);
+                        if (qc != null && qc.getItemStack() != null) {
+                            long before = qc.getAmount();
+                            if (before > 0) {
+                                qc.reduceAmount(1);
+                                DataTypeMethods.setCustom(im, Keys.QUANTUM_STORAGE_INSTANCE, PersistentQuantumStorageType.TYPE, qc);
+                                qc.addMetaLore(im);
+                                slotItem.setItemMeta(im);
+
+                                if (qc.getAmount() <= 0) {
+                                    menu.replaceExistingItem(recipeSlot, null);
+                                } else {
+                                    menu.replaceExistingItem(recipeSlot, slotItem);
+                                }
+                                consumed = true;
+                            }
+                        }
+                    }
+                } catch (Throwable ignored) {}
+
+                if (!consumed) {
                     menu.consumeItem(recipeSlot, 1, true);
                 }
             }
         }
-    }
-
-    private boolean testRecipe(ItemStack[] input, ItemStack[] recipe) {
-        for (int test = 0; test < recipe.length; test++) {
-            if (!SlimefunUtils.isItemSimilar(input[test], recipe[test], true, false, false)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private BlockBreakHandler getBlockBreakHandler() {
@@ -182,8 +284,10 @@ public class NetworkQuantumWorkbench extends SlimefunItem {
             @Override
             public void onPlayerBreak(BlockBreakEvent event, ItemStack itemStack, List<ItemStack> drops) {
                 BlockMenu menu = BlockStorage.getInventory(event.getBlock());
-                menu.dropItems(menu.getLocation(), RECIPE_SLOTS);
-                menu.dropItems(menu.getLocation(), OUTPUT_SLOT);
+                if (menu != null) {
+                    menu.dropItems(menu.getLocation(), RECIPE_SLOTS);
+                    menu.dropItems(menu.getLocation(), OUTPUT_SLOT);
+                }
             }
         };
     }

@@ -6,7 +6,7 @@ import io.github.sefiraat.networks.Networks;
 import io.github.sefiraat.networks.listeners.BlockStateRefreshListener;
 import io.github.sefiraat.networks.network.NodeDefinition;
 import io.github.sefiraat.networks.network.NodeType;
-import io.github.thebusybiscuit.slimefun4.api.MinecraftVersion;
+// import io.github.thebusybiscuit.slimefun4.api.MinecraftVersion;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
@@ -20,11 +20,12 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 public class NetworkVanillaGrabber extends NetworkDirectional {
@@ -113,21 +114,20 @@ public class NetworkVanillaGrabber extends NetworkDirectional {
         } else if (inventory instanceof BrewerInventory brewerInventory) {
             for (int i = 0; i < 3; i++) {
                 final ItemStack stack = brewerInventory.getContents()[i];
-                if (stack != null && stack.getType() != Material.AIR) { // 网拓复制过来的，包能跑
-                    final PotionMeta potionMeta = (PotionMeta) stack.getItemMeta();
-                    if (Slimefun.getMinecraftVersion().isAtLeast(MinecraftVersion.MINECRAFT_1_20_5)) {
-                        // 1.20.5 及以上
-                        if (potionMeta.getBasePotionType() == PotionType.WATER) {
-                            grabItem(blockMenu, stack);
-                        }
-                    } else {
-                        // 1.20.5 以下
-                        PotionData bpd = potionMeta.getBasePotionData();
-                        if (bpd != null && bpd.getType() != PotionType.WATER) {
-                            grabItem(blockMenu, stack);
-                            break;
-                        }
-                    }
+                if (stack == null || stack.getType() == Material.AIR) {
+                    continue;
+                }
+
+                if (!(stack.getItemMeta() instanceof PotionMeta)) {
+                    continue;
+                }
+
+                final PotionMeta potionMeta = (PotionMeta) stack.getItemMeta();
+
+                // Jika potion bukan WATER (alias hasil brewing), kita grab
+                if (isBrewedPotion(potionMeta)) {
+                    grabItem(blockMenu, stack);
+                    break;
                 }
             }
         } else {
@@ -147,6 +147,46 @@ public class NetworkVanillaGrabber extends NetworkDirectional {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Cek apakah potion merupakan hasil brewing (bukan water).
+     * - Coba panggil getBasePotionType() via refleksi (preferred).
+     * - Jika tidak tersedia, fallback ke getBasePotionData() via refleksi.
+     */
+    private static boolean isBrewedPotion(PotionMeta meta) {
+        // Try getBasePotionType() first (modern)
+        try {
+            Method m = meta.getClass().getMethod("getBasePotionType");
+            Object res = m.invoke(meta);
+            if (res instanceof PotionType) {
+                return ((PotionType) res) != PotionType.WATER;
+            }
+        } catch (NoSuchMethodException ignored) {
+            // fallback to older approach
+        } catch (IllegalAccessException | InvocationTargetException | NoClassDefFoundError ignored) {
+            // fallback
+        }
+
+        // Fallback: reflectively call getBasePotionData() and then getType()
+        try {
+            Method gm = meta.getClass().getMethod("getBasePotionData");
+            Object potionData = gm.invoke(meta);
+            if (potionData != null) {
+                try {
+                    Method getType = potionData.getClass().getMethod("getType");
+                    Object typeObj = getType.invoke(potionData);
+                    if (typeObj instanceof PotionType) {
+                        return ((PotionType) typeObj) != PotionType.WATER;
+                    }
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored2) {
+                }
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoClassDefFoundError ignored) {
+        }
+
+        // Jika semua gagal, anggap bukan brewed (aman)
+        return false;
     }
 
     @Nonnull

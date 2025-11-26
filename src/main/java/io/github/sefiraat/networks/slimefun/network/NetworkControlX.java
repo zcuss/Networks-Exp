@@ -17,21 +17,18 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.blocks.BlockPosition;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
+/**
+ * NetworkControlX optimized to reduce per-tick allocations and expensive calls.
+ */
 public class NetworkControlX extends NetworkDirectional {
 
     public static final ItemStack TEMPLATE_BACKGROUND_STACK = ItemCreator.create(
@@ -51,8 +48,25 @@ public class NetworkControlX extends NetworkDirectional {
     private static final int UP_SLOT = 14;
     private static final int DOWN_SLOT = 32;
     private static final int REQUIRED_POWER = 100;
-    private static final Particle.DustOptions DUST_OPTIONS = new Particle.DustOptions(Color.GRAY, 1);
+
+    // particles: reduced count for less server overhead
+    private static final Particle.DustOptions DUST_OPTIONS = new Particle.DustOptions(Color.GRAY, 1f);
     private final Set<BlockPosition> blockCache = new HashSet<>();
+
+    // Common set of blocked container-like materials to skip fast
+    private static final Set<Material> BLOCKED_CONTAINERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            Material.CHEST,
+            Material.TRAPPED_CHEST,
+            Material.ENDER_CHEST,
+            Material.BARREL,
+            Material.FURNACE,
+            Material.BLAST_FURNACE,
+            Material.SMOKER,
+            Material.HOPPER,
+            Material.DROPPER,
+            Material.DISPENSER,
+            Material.BREWING_STAND
+    )));
 
     public NetworkControlX(ItemGroup itemGroup, SlimefunItemStack item, RecipeType recipeType, ItemStack[] recipe) {
         super(itemGroup, item, recipeType, recipe, NodeType.CUTTER);
@@ -72,99 +86,87 @@ public class NetworkControlX extends NetworkDirectional {
     }
 
     private void tryBreakBlock(@Nonnull BlockMenu blockMenu) {
+        // minimal early-exit checks (avoid object creation if not needed)
         final NodeDefinition definition = NetworkStorage.getAllNetworkObjects().get(blockMenu.getLocation());
+        if (definition == null || definition.getNode() == null) return;
 
-        if (definition == null || definition.getNode() == null) {
-            return;
-        }
-
-        if (definition.getNode().getRoot().getRootPower() < REQUIRED_POWER) {
-            return;
-        }
+        // minimal power check
+        if (definition.getNode().getRoot().getRootPower() < REQUIRED_POWER) return;
 
         final BlockFace direction = getCurrentDirection(blockMenu);
-
-        if (direction == BlockFace.SELF) {
-            return;
-        }
+        if (direction == BlockFace.SELF) return;
 
         final Block targetBlock = blockMenu.getBlock().getRelative(direction);
         final BlockPosition targetPosition = new BlockPosition(targetBlock);
-
-        if (this.blockCache.contains(targetPosition)) {
-            return;
-        }
+        if (this.blockCache.contains(targetPosition)) return;
 
         final Material material = targetBlock.getType();
 
-        if (material.getHardness() < 0 || material.isAir()) {
-            return;
-        }
+        // cheap rejects
+        if (material.isAir() || material.getHardness() < 0) return;
 
+        // skip Slimefun blocks quickly
         final SlimefunItem slimefunItem = BlockStorage.check(targetBlock);
+        if (slimefunItem != null) return;
 
-        if (slimefunItem != null) {
-            return;
-        }
-
+        // template handling
         final ItemStack templateStack = blockMenu.getItemInSlot(TEMPLATE_SLOT);
         boolean hasTemplate = templateStack != null && !templateStack.getType().isAir();
-
         if (hasTemplate) {
-            if (targetBlock.getType() != templateStack.getType() || SlimefunItem.getByItem(templateStack) != null) {
+            Material tplMat = templateStack.getType();
+            // If template is a Slimefun item or not same material, skip
+            if (tplMat != material || SlimefunItem.getByItem(templateStack) != null) {
                 return;
             }
         }
 
-        final UUID uuid = UUID.fromString(BlockStorage.getLocationInfo(blockMenu.getLocation(), OWNER_KEY));
-        final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-
+        // permission check: only when needed do a parse/lookup
+        final String ownerString = BlockStorage.getLocationInfo(blockMenu.getLocation(), OWNER_KEY);
+        if (ownerString == null) return;
+        UUID ownerUuid;
+        try {
+            ownerUuid = UUID.fromString(ownerString);
+        } catch (IllegalArgumentException ex) {
+            return;
+        }
+        final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(ownerUuid);
         if (!Slimefun.getProtectionManager().hasPermission(offlinePlayer, targetBlock, Interaction.BREAK_BLOCK)) {
             return;
         }
 
-        if (material == Material.CHEST
-                || material == Material.TRAPPED_CHEST
-                || material == Material.ENDER_CHEST
-                || material == Material.BARREL
-                || material == Material.SHULKER_BOX
-                || material.name().endsWith("_SHULKER_BOX")
-                || material.name().endsWith("_SHELF")
-                || material == Material.FURNACE
-                || material == Material.BLAST_FURNACE
-                || material == Material.SMOKER
-                || material == Material.HOPPER
-                || material == Material.DROPPER
-                || material == Material.DISPENSER
-                || material == Material.BREWING_STAND
-        ) {
-            return;
-        }
+        // Blocked materials set fast-check, plus fallback to name checks for shulker-like names
+        if (BLOCKED_CONTAINERS.contains(material)) return;
+        String matName = material.name();
+        if (matName.endsWith("_SHULKER_BOX") || matName.endsWith("_SHELF") || matName.equals("SHULKER_BOX")) return;
 
+        // create a 1-item stack representing the block type to add to network
         final ItemStack resultStack = new ItemStack(material, 1);
 
+        // add to network, then if amount becomes 0, physically remove block on main thread
         definition.getNode().getRoot().addItemStack0(blockMenu.getBlock().getLocation(), resultStack);
 
         if (resultStack.getAmount() == 0) {
-            CraftBlock cb = ((CraftBlock) targetBlock);
-            ServerLevel level = cb.getCraftWorld().getHandle();
-            LevelLightEngine ll = level.chunkSource.getLightEngine();
-
+            // mark as processed and schedule the block removal + particle + power removal on main thread
             this.blockCache.add(targetPosition);
 
-            Bukkit.getScheduler().runTask(Networks.getInstance(), bukkitTask -> {
-                level.removeBlockEntity(cb.getPosition());
-                level.setBlock(cb.getPosition(), Blocks.AIR.defaultBlockState(), 3);
-                ll.checkBlock(cb.getPosition());
+            Bukkit.getScheduler().runTask(Networks.getInstance(), () -> {
+                try {
+                    // remove block without physics
+                    targetBlock.setType(Material.AIR, false);
 
-                ParticleUtils.displayParticleRandomly(
-                        LocationUtils.centre(targetBlock.getLocation()),
-                        1,
-                        5,
-                        DUST_OPTIONS
-                );
+                    // visual feedback (cheaper parameters)
+                    ParticleUtils.displayParticleRandomly(
+                            LocationUtils.centre(targetBlock.getLocation()),
+                            1, // count
+                            3, // spread/attempts
+                            DUST_OPTIONS
+                    );
 
-                definition.getNode().getRoot().removeRootPower(REQUIRED_POWER);
+                    // consume power from network
+                    definition.getNode().getRoot().removeRootPower(REQUIRED_POWER);
+                } catch (Exception ex) {
+                    Networks.getInstance().getLogger().warning("Failed to cut/paste block via Bukkit API: " + ex.getMessage());
+                }
             });
         }
     }
@@ -188,42 +190,19 @@ public class NetworkControlX extends NetworkDirectional {
     }
 
     @Override
-    public int getNorthSlot() {
-        return NORTH_SLOT;
-    }
-
+    public int getNorthSlot() { return NORTH_SLOT; }
     @Override
-    public int getSouthSlot() {
-        return SOUTH_SLOT;
-    }
-
+    public int getSouthSlot() { return SOUTH_SLOT; }
     @Override
-    public int getEastSlot() {
-        return EAST_SLOT;
-    }
-
+    public int getEastSlot() { return EAST_SLOT; }
     @Override
-    public int getWestSlot() {
-        return WEST_SLOT;
-    }
-
+    public int getWestSlot() { return WEST_SLOT; }
     @Override
-    public int getUpSlot() {
-        return UP_SLOT;
-    }
-
+    public int getUpSlot() { return UP_SLOT; }
     @Override
-    public int getDownSlot() {
-        return DOWN_SLOT;
-    }
-
+    public int getDownSlot() { return DOWN_SLOT; }
     @Override
-    public int[] getItemSlots() {
-        return new int[]{TEMPLATE_SLOT};
-    }
-
+    public int[] getItemSlots() { return new int[]{TEMPLATE_SLOT}; }
     @Override
-    protected Particle.DustOptions getDustOptions() {
-        return DUST_OPTIONS;
-    }
+    protected Particle.DustOptions getDustOptions() { return DUST_OPTIONS; }
 }

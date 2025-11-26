@@ -59,7 +59,6 @@ public class NetworkCraftingGrid extends AbstractGrid {
 
     private static final Map<Location, GridCache> CACHE_MAP = new HashMap<>();
 
-
     public NetworkCraftingGrid(ItemGroup itemGroup, SlimefunItemStack item, RecipeType recipeType, ItemStack[] recipe) {
         super(itemGroup, item, recipeType, recipe);
         for (int craftItem : CRAFT_ITEMS) {
@@ -265,7 +264,8 @@ public class NetworkCraftingGrid extends AbstractGrid {
             if (stack == null || stack.getType() == Material.AIR) {
                 continue;
             }
-            definition.getNode().getRoot().addItemStack(stack);
+            // gunakan addItemStack0 dengan accessor yang tepat (lokasi menu)
+            definition.getNode().getRoot().addItemStack0(menu.getLocation(), stack);
         }
     }
 }

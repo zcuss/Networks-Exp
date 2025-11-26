@@ -5,19 +5,26 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.Nonnull;
 
+/**
+ * DummyItemGroup sederhana yang memastikan icon yang dipassing di constructor
+ * tetap dipakai oleh Slimefun (mengembalikan clone dari item yang sudah di-set).
+ */
 public class DummyItemGroup extends ItemGroup {
 
-    @ParametersAreNonnullByDefault
     public DummyItemGroup(NamespacedKey key, ItemStack item) {
         super(key, item);
     }
 
     @Override
-    @ParametersAreNonnullByDefault
-    public boolean isHidden(Player p) {
-        return true;
+    public ItemStack getItem(@Nonnull Player player) {
+        ItemStack it = super.getItem(player);
+        return (it == null) ? null : it.clone();
     }
 
+    @Override
+    public boolean isVisible(@Nonnull Player player) {
+        return true;
+    }
 }

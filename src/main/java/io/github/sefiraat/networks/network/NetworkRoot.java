@@ -308,8 +308,10 @@ public class NetworkRoot extends NetworkNode {
             case WIRELESS_TRANSMITTER -> wirelessTransmitters.add(location);
             case WIRELESS_RECEIVER -> wirelessReceivers.add(location);
             case POWER_OUTLET -> powerOutlets.add(location);
+            case WIPER -> purgers.add(location); // <- baru ditambahkan: treat WIPER sebagai PURGER
         }
     }
+
 
     public int getNodeCount() {
         return this.nodeLocations.size();

@@ -6,18 +6,23 @@ import io.github.thebusybiscuit.slimefun4.api.MinecraftVersion;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.data.persistent.PersistentDataAPI;
 import lombok.experimental.UtilityClass;
-import org.bukkit.entity.LivingEntity;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+// import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Objects;
-import java.util.Optional;
+import java.lang.reflect.Method;
+import java.util.*;
 
 @UtilityClass
 public class StackUtils {
+
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+
     @Nonnull
     public static ItemStack getAsQuantity(@Nonnull ItemStack itemStack, int amount) {
         return Converter.getItem(itemStack, amount);
@@ -95,8 +100,8 @@ public class StackUtils {
             return false;
         }
 
-        // Check the lore
-        if (checkLore && !Objects.equals(itemMeta.getLore(), cachedMeta.getLore())) {
+        // Check the lore (use safe getter that accounts for component vs legacy)
+        if (checkLore && !Objects.equals(getLoreAsStrings(itemMeta), getLoreAsStrings(cachedMeta))) {
             return false;
         }
 
@@ -104,15 +109,14 @@ public class StackUtils {
         final Optional<String> optionalStackId1 = Slimefun.getItemDataService().getItemData(itemMeta);
         final Optional<String> optionalStackId2 = Slimefun.getItemDataService().getItemData(cachedMeta);
         if (optionalStackId1.isPresent() && optionalStackId2.isPresent()) {
-            return optionalStackId1.get().equals(optionalStackId2.get());
+            if (!optionalStackId1.get().equals(optionalStackId2.get())) return false;
         }
 
-        // Finally, check the display name
-        return !itemMeta.hasDisplayName() || (itemMeta.getDisplayName().equals(cachedMeta.getDisplayName()));
-
-        // Everything should match if we've managed to get here
+        // Finally, check the display name using safe getter
+        String name1 = getDisplayNamePlain(itemMeta);
+        String name2 = getDisplayNamePlain(cachedMeta);
+        return name1 == null || name1.equals(name2);
     }
-
 
     public boolean canQuickEscapeMetaVariant(@Nonnull ItemMeta metaOne, @Nonnull ItemMeta metaTwo) {
 
@@ -229,7 +233,8 @@ public class StackUtils {
             if (instanceOne.hasMapView() != instanceTwo.hasMapView()) {
                 return true;
             }
-            if (instanceOne.hasLocationName() != instanceTwo.hasLocationName()) {
+            // gunakan helper safe agar tidak panggil deprecated langsung
+            if (mapHasLocationNameSafe(instanceOne) != mapHasLocationNameSafe(instanceTwo)) {
                 return true;
             }
             if (instanceOne.hasColor() != instanceTwo.hasColor()) {
@@ -238,7 +243,7 @@ public class StackUtils {
             if (!Objects.equals(instanceOne.getMapView(), instanceTwo.getMapView())) {
                 return true;
             }
-            if (!Objects.equals(instanceOne.getLocationName(), instanceTwo.getLocationName())) {
+            if (!Objects.equals(mapGetLocationNameSafe(instanceOne), mapGetLocationNameSafe(instanceTwo))) {
                 return true;
             }
             if (!Objects.equals(instanceOne.getColor(), instanceTwo.getColor())) {
@@ -249,11 +254,12 @@ public class StackUtils {
         // Potion
         if (metaOne instanceof PotionMeta instanceOne && metaTwo instanceof PotionMeta instanceTwo) {
             if (Slimefun.getMinecraftVersion().isAtLeast(MinecraftVersion.MINECRAFT_1_20_5)) {
-                if (instanceOne.getBasePotionType() != instanceTwo.getBasePotionType()) {
+                // gunakan safe getter untuk base potion type
+                if (!Objects.equals(getBasePotionTypeSafe(instanceOne), getBasePotionTypeSafe(instanceTwo))) {
                     return true;
                 }
             } else {
-                if (!Objects.equals(instanceOne.getBasePotionData(), instanceTwo.getBasePotionData())) {
+                if (!Objects.equals(getBasePotionDataSafe(instanceOne), getBasePotionDataSafe(instanceTwo))) {
                     return true;
                 }
             }
@@ -306,11 +312,123 @@ public class StackUtils {
         return false;
     }
 
+    // -------------------------
+    // Safe helpers (component-aware + reflection fallback)
+    // -------------------------
+
+    private static List<String> getLoreAsStrings(@Nullable ItemMeta meta) {
+        if (meta == null) return Collections.emptyList();
+
+        // coba component-based lore() returning List<Component>
+        try {
+            Method loreMethod = meta.getClass().getMethod("lore");
+            Object res = loreMethod.invoke(meta);
+            if (res instanceof List) {
+                List<?> comps = (List<?>) res;
+                List<String> out = new ArrayList<>(comps.size());
+                for (Object c : comps) {
+                    if (c instanceof Component) out.add(LEGACY.serialize((Component) c));
+                    else out.add(c == null ? null : String.valueOf(c));
+                }
+                return out;
+            }
+        } catch (NoSuchMethodException ignored) {
+            // no component lore
+        } catch (Throwable ignored) {
+            // other failure -> fallback
+        }
+
+        // fallback ke legacy getLore() via refleksi (hindari compile-time deprecation)
+        try {
+            Method legacyGetLore = meta.getClass().getMethod("getLore");
+            Object legacy = legacyGetLore.invoke(meta);
+            if (legacy instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<String> ll = (List<String>) legacy;
+                return ll == null ? Collections.emptyList() : new ArrayList<>(ll);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        return Collections.emptyList();
+    }
+
+    private static @Nullable String getDisplayNamePlain(@Nullable ItemMeta meta) {
+        if (meta == null) return null;
+
+        // coba component-based displayName()
+        try {
+            Method m = meta.getClass().getMethod("displayName");
+            Object comp = m.invoke(meta);
+            if (comp instanceof Component) return LEGACY.serialize((Component) comp);
+        } catch (NoSuchMethodException ignored) {
+            // no component displayName
+        } catch (Throwable ignored) {
+        }
+
+        // fallback ke legacy getDisplayName()
+        try {
+            Method legacy = meta.getClass().getMethod("getDisplayName");
+            Object res = legacy.invoke(meta);
+            return res == null ? null : String.valueOf(res);
+        } catch (Throwable ignored) {
+        }
+
+        return null;
+    }
+
+    private static boolean mapHasLocationNameSafe(@Nullable MapMeta meta) {
+        if (meta == null) return false;
+        try {
+            Method m = meta.getClass().getMethod("hasLocationName");
+            Object r = m.invoke(meta);
+            if (r instanceof Boolean) return (Boolean) r;
+        } catch (Throwable ignored) {
+        }
+        // As ultimate fallback try legacy method name (same name) via reflection already attempted - return false
+        return false;
+    }
+
+    private static @Nullable String mapGetLocationNameSafe(@Nullable MapMeta meta) {
+        if (meta == null) return null;
+        try {
+            Method m = meta.getClass().getMethod("getLocationName");
+            Object r = m.invoke(meta);
+            return r == null ? null : String.valueOf(r);
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    private static @Nullable Object getBasePotionDataSafe(@Nullable PotionMeta meta) {
+        if (meta == null) return null;
+        try {
+            Method m = meta.getClass().getMethod("getBasePotionData");
+            return m.invoke(meta);
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    private static @Nullable Object getBasePotionTypeSafe(@Nullable PotionMeta meta) {
+        if (meta == null) return null;
+        try {
+            Method m = meta.getClass().getMethod("getBasePotionType");
+            return m.invoke(meta);
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    // -------------------------
+    // Cooldown helpers (unchanged)
+    // -------------------------
+
     /**
-     * Heal the entity by the provided amount
+     * Put item on cooldown (PDC-based)
      *
-     * @param itemStack         The {@link LivingEntity} to heal
-     * @param durationInSeconds The amount to heal by
+     * @param itemStack         The {@link ItemStack} to tag
+     * @param durationInSeconds Duration in seconds
      */
     @ParametersAreNonnullByDefault
     public static void putOnCooldown(ItemStack itemStack, int durationInSeconds) {
@@ -322,9 +440,10 @@ public class StackUtils {
     }
 
     /**
-     * Heal the entity by the provided amount
+     * Check cooldown (PDC-based)
      *
-     * @param itemStack The {@link LivingEntity} to heal
+     * @param itemStack The {@link ItemStack} to check
+     * @return true if still on cooldown
      */
     @ParametersAreNonnullByDefault
     public static boolean isOnCooldown(ItemStack itemStack) {

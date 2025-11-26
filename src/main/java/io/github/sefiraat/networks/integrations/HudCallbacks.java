@@ -13,6 +13,9 @@ import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+
+
 public class HudCallbacks {
     private static final String EMPTY = "&7| Empty";
 
@@ -51,10 +54,20 @@ public class HudCallbacks {
         ItemMeta meta = itemStack.getItemMeta();
         String amountStr = HudBuilder.getAbbreviatedNumber(amount);
         String limitStr = HudBuilder.getAbbreviatedNumber(limit);
-        String itemName = meta != null && meta.hasDisplayName()
-                ? meta.getDisplayName()
-                : ChatUtils.humanize(itemStack.getType().name());
+
+        String itemName;
+        if (meta != null && meta.hasDisplayName()) {
+            // Convert Adventure Component display name back to a legacy string (close to old getDisplayName output)
+            if (meta.displayName() != null) {
+                itemName = LegacyComponentSerializer.legacySection().serialize(meta.displayName());
+            } else {
+                itemName = ChatUtils.humanize(itemStack.getType().name());
+            }
+        } else {
+            itemName = ChatUtils.humanize(itemStack.getType().name());
+        }
 
         return "&7| &f" + itemName + " &7| " + amountStr + "/" + limitStr;
     }
+
 }

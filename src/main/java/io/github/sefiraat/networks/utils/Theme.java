@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@SuppressWarnings({"deprecation", "DuplicatedCode"})
+@SuppressWarnings("DuplicatedCode")
 public enum Theme {
     GOLD(ChatColor.GOLD, ""),
     WARNING(ChatColor.YELLOW, "Warning"),
@@ -43,16 +43,6 @@ public enum Theme {
         this.loreLine = loreLine;
     }
 
-    /**
-     * Gets a SlimefunItemStack with a pre-populated lore and name with themed colors.
-     *
-     * @param id        The ID for the new {@link SlimefunItemStack}
-     * @param itemStack The vanilla {@link ItemStack} used to base the {@link SlimefunItemStack} on
-     * @param themeType The {@link Theme} {@link ChatColor} to apply to the {@link SlimefunItemStack} name
-     * @param name      The name to apply to the {@link SlimefunItemStack}
-     * @param lore      The lore lines for the {@link SlimefunItemStack}. Lore is book-ended with empty strings.
-     * @return Returns the new {@link SlimefunItemStack}
-     */
     @Nonnull
     @ParametersAreNonnullByDefault
     public static SlimefunItemStack themedSlimefunItemStack(String id, ItemStack itemStack, Theme themeType, String name, String... lore) {
@@ -60,7 +50,7 @@ public enum Theme {
         List<String> finalLore = new ArrayList<>();
         finalLore.add("");
         for (String s : lore) {
-            finalLore.add(passiveColor + s);
+            finalLore.add(passiveColor.toString() + s);
         }
         finalLore.add("");
         finalLore.add(applyThemeToString(Theme.CLICK_INFO, themeType.getLoreLine()));
@@ -68,32 +58,17 @@ public enum Theme {
                 id,
                 itemStack,
                 Theme.applyThemeToString(themeType, name),
-                finalLore.toArray(new String[finalLore.size() - 1])
+                finalLore.toArray(new String[0])
         );
     }
 
-    /**
-     * Applies the theme color to a given string
-     *
-     * @param themeType The {@link Theme} to apply the color from
-     * @param string    The string to apply the color to
-     * @return Returns the string provides preceded by the color
-     */
     @Nonnull
     @ParametersAreNonnullByDefault
     public static String applyThemeToString(Theme themeType, String string) {
-        return themeType.getColor() + string;
+        // Pastikan kita menggunakan kode warna legacy (ChatColor.toString())
+        return themeType.getColor().toString() + string;
     }
 
-    /**
-     * Gets an ItemStack with a pre-populated lore and name with themed colors.
-     *
-     * @param material  The {@link Material} used to base the {@link ItemStack} on
-     * @param themeType The {@link Theme} {@link ChatColor} to apply to the {@link ItemStack} name
-     * @param name      The name to apply to the {@link ItemStack}
-     * @param lore      The lore lines for the {@link ItemStack}. Lore is book-ended with empty strings.
-     * @return Returns the new {@link ItemStack}
-     */
     @Nonnull
     @ParametersAreNonnullByDefault
     public static ItemStack themedItemStack(Material material, Theme themeType, String name, String... lore) {
@@ -101,25 +76,17 @@ public enum Theme {
         List<String> finalLore = new ArrayList<>();
         finalLore.add("");
         for (String s : lore) {
-            finalLore.add(passiveColor + s);
+            finalLore.add(passiveColor.toString() + s);
         }
         finalLore.add("");
         finalLore.add(applyThemeToString(Theme.CLICK_INFO, themeType.getLoreLine()));
         return ItemCreator.create(
                 material,
                 Theme.applyThemeToString(themeType, name),
-                finalLore.toArray(new String[finalLore.size() - 1])
+                finalLore.toArray(new String[0])
         );
     }
 
-    /**
-     * Returns the name of this enum constant, as contained in the
-     * declaration. This method may be overridden, though it typically
-     * isn't necessary or desirable. An enum class should override this
-     * method when a more “programmer-friendly” string form exists.
-     *
-     * @return the name of this enum constant
-     */
     @Override
     public String toString() {
         return this.color.toString();
