@@ -7,7 +7,6 @@ import io.github.sefiraat.networks.utils.ItemCreator;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.Theme;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
-import lombok.experimental.UtilityClass;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -15,8 +14,15 @@ import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
 
-@UtilityClass
+/**
+ * Kelas holder statis untuk ItemGroups plugin.
+ * Tidak menggunakan Lombok @UtilityClass agar lebih portable.
+ */
 public final class NetworksItemGroups {
+
+    private NetworksItemGroups() {
+        // prevent instantiation
+    }
 
     public static final MainFlexGroup MAIN = new MainFlexGroup(
             Keys.newKey("main"),
@@ -82,29 +88,30 @@ public final class NetworksItemGroups {
             )
     );
 
-    // --- BEGIN : Static registration (beginI style) ---
     static {
-        Networks plugin = Networks.getInstance();
+        final Networks plugin = Networks.getInstance();
 
+        // Register semua ItemGroup ke Slimefun
         MAIN.register(plugin);
         MATERIALS.register(plugin);
         TOOLS.register(plugin);
         NETWORK_ITEMS.register(plugin);
         NETWORK_QUANTUMS.register(plugin);
+        DISABLED_ITEMS.register(plugin);
         MORE_NETWORK_BRIDGE.register(plugin);
         NETWORK_TEST.register(plugin);
-        DISABLED_ITEMS.register(plugin);
     }
-    // --- END : Static registration ---
 
     public static class HiddenItemGroup extends ItemGroup {
+
         public HiddenItemGroup(NamespacedKey key, ItemStack item) {
             super(key, item);
         }
 
+        // isHidden(Player) deprecated — override isVisible untuk kontrol visibilitas
         @Override
-        public boolean isHidden(@Nonnull Player p) {
-            return true;
+        public boolean isVisible(@Nonnull Player player) {
+            return false; // selalu tersembunyi
         }
     }
 }

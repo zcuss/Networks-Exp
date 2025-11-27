@@ -19,94 +19,134 @@ import org.bukkit.inventory.ItemStack;
 @UtilityClass
 public class NetworkSlimefunItems {
 
-    public static final UnplaceableBlock SYNTHETIC_EMERALD_SHARD;
-    public static final UnplaceableBlock OPTIC_GLASS;
-    public static final UnplaceableBlock OPTIC_CABLE;
-    public static final UnplaceableBlock OPTIC_STAR;
-    public static final UnplaceableBlock RADIOACTIVE_OPTIC_STAR;
-    public static final UnplaceableBlock SHRINKING_BASE;
-    public static final UnplaceableBlock SIMPLE_NANOBOTS;
-    public static final UnplaceableBlock ADVANCED_NANOBOTS;
-    public static final UnplaceableBlock AI_CORE;
-    public static final UnplaceableBlock EMPOWERED_AI_CORE;
-    public static final UnplaceableBlock PRISTINE_AI_CORE;
-    public static final UnplaceableBlock INTERDIMENSIONAL_PRESENCE;
+    // Fields declared (no initialization here)
+    public static UnplaceableBlock SYNTHETIC_EMERALD_SHARD;
+    public static UnplaceableBlock OPTIC_GLASS;
+    public static UnplaceableBlock OPTIC_CABLE;
+    public static UnplaceableBlock OPTIC_STAR;
+    public static UnplaceableBlock RADIOACTIVE_OPTIC_STAR;
+    public static UnplaceableBlock SHRINKING_BASE;
+    public static UnplaceableBlock SIMPLE_NANOBOTS;
+    public static UnplaceableBlock ADVANCED_NANOBOTS;
+    public static UnplaceableBlock AI_CORE;
+    public static UnplaceableBlock EMPOWERED_AI_CORE;
+    public static UnplaceableBlock PRISTINE_AI_CORE;
+    public static UnplaceableBlock INTERDIMENSIONAL_PRESENCE;
 
-    public static final NetworkController NETWORK_CONTROLLER;
-    public static final NetworkBridge NETWORK_BRIDGE;
-    public static final NetworkBridge NETWORK_BRIDGE_ORANGE;
-    public static final NetworkBridge NETWORK_BRIDGE_MAGENTA;
-    public static final NetworkBridge NETWORK_BRIDGE_LIGHT_BLUE;
-    public static final NetworkBridge NETWORK_BRIDGE_YELLOW;
-    public static final NetworkBridge NETWORK_BRIDGE_LIME;
-    public static final NetworkBridge NETWORK_BRIDGE_PINK;
-    public static final NetworkBridge NETWORK_BRIDGE_GRAY;
-    public static final NetworkBridge NETWORK_BRIDGE_CYAN;
-    public static final NetworkBridge NETWORK_BRIDGE_PURPLE;
-    public static final NetworkBridge NETWORK_BRIDGE_BLUE;
-    public static final NetworkBridge NETWORK_BRIDGE_BROWN;
-    public static final NetworkBridge NETWORK_BRIDGE_GREEN;
-    public static final NetworkBridge NETWORK_BRIDGE_RED;
-    public static final NetworkBridge NETWORK_BRIDGE_BLACK;
-    
-    public static final NetworkBridge NETWORK_BRIDGE_TEST;
+    public static NetworkController NETWORK_CONTROLLER;
+    public static NetworkBridge NETWORK_BRIDGE;
+    public static NetworkBridge NETWORK_BRIDGE_ORANGE;
+    public static NetworkBridge NETWORK_BRIDGE_MAGENTA;
+    public static NetworkBridge NETWORK_BRIDGE_LIGHT_BLUE;
+    public static NetworkBridge NETWORK_BRIDGE_YELLOW;
+    public static NetworkBridge NETWORK_BRIDGE_LIME;
+    public static NetworkBridge NETWORK_BRIDGE_PINK;
+    public static NetworkBridge NETWORK_BRIDGE_GRAY;
+    public static NetworkBridge NETWORK_BRIDGE_CYAN;
+    public static NetworkBridge NETWORK_BRIDGE_PURPLE;
+    public static NetworkBridge NETWORK_BRIDGE_BLUE;
+    public static NetworkBridge NETWORK_BRIDGE_BROWN;
+    public static NetworkBridge NETWORK_BRIDGE_GREEN;
+    public static NetworkBridge NETWORK_BRIDGE_RED;
+    public static NetworkBridge NETWORK_BRIDGE_BLACK;
 
-    public static final NetworkMonitor NETWORK_MONITOR;
-    public static final NetworkImport NETWORK_IMPORT;
-    public static final NetworkExport NETWORK_EXPORT;
-    public static final NetworkGrabber NETWORK_GRABBER;
-    public static final NetworkPusher NETWORK_PUSHER;
-    public static final NetworkBestPusher NETWORK_BEST_PUSHER;
-    public static final NetworkControlX NETWORK_CONTROL_X;
-    public static final NetworkControlV NETWORK_CONTROL_V;
-    public static final NetworkVacuum NETWORK_VACUUM;
-    public static final NetworkVanillaGrabber NETWORK_VANILLA_GRABBER;
-    public static final NetworkVanillaPusher NETWORK_VANILLA_PUSHER;
-    public static final NetworkWirelessTransmitter NETWORK_WIRELESS_TRANSMITTER;
-    public static final NetworkWirelessReceiver NETWORK_WIRELESS_RECEIVER;
-    public static final NetworkPurger NETWORK_PURGER;
-    public static final NetworkGrid NETWORK_GRID;
-    public static final NetworkCraftingGrid NETWORK_CRAFTING_GRID;
-    public static final NetworkCell NETWORK_CELL;
-    public static final NetworkGreedyBlock NETWORK_GREEDY_BLOCK;
-    public static final NetworkQuantumWorkbench NETWORK_QUANTUM_WORKBENCH;
-    public static final NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_1;
-    public static final NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_2;
-    public static final NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_3;
-    public static final NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_4;
-    public static final NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_5;
-    public static final NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_6;
-    public static final NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_7;
-    public static final NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_8;
-    public static final NetworkPowerNode NETWORK_CAPACITOR_1;
-    public static final NetworkPowerNode NETWORK_CAPACITOR_2;
-    public static final NetworkPowerNode NETWORK_CAPACITOR_3;
-    public static final NetworkPowerNode NETWORK_CAPACITOR_4;
-    public static final NetworkPowerOutlet NETWORK_POWER_OUTLET_1;
-    public static final NetworkPowerOutlet NETWORK_POWER_OUTLET_2;
-    public static final NetworkPowerDisplay NETWORK_POWER_DISPLAY;
-    public static final NetworkEncoder NETWORK_RECIPE_ENCODER;
-    public static final NetworkAutoCrafter NETWORK_AUTO_CRAFTER;
-    public static final NetworkAutoCrafter NETWORK_AUTO_CRAFTER_WITHHOLDING;
+    public static NetworkBridge NETWORK_BRIDGE_TEST;
 
-    public static final CraftingBlueprint CRAFTING_BLUEPRINT;
-    public static final NetworkProbe NETWORK_PROBE;
-    public static final NetworkRemote NETWORK_REMOTE;
-    public static final NetworkRemote NETWORK_REMOTE_EMPOWERED;
-    public static final NetworkRemote NETWORK_REMOTE_PRISTINE;
-    public static final NetworkRemote NETWORK_REMOTE_ULTIMATE;
-    public static final NetworkCrayon NETWORK_CRAYON;
-    public static final NetworkConfigurator NETWORK_CONFIGURATOR;
-    public static final NetworkWirelessConfigurator NETWORK_WIRELESS_CONFIGURATOR;
-    public static final NetworkRake NETWORK_RAKE_1;
-    public static final NetworkRake NETWORK_RAKE_2;
-    public static final NetworkRake NETWORK_RAKE_3;
-    public static final NetworkAdminDebugger NETWORK_ADMIN_DEBUGGER;
+    public static NetworkMonitor NETWORK_MONITOR;
+    public static NetworkImport NETWORK_IMPORT;
+    public static NetworkExport NETWORK_EXPORT;
+    public static NetworkGrabber NETWORK_GRABBER;
+    public static NetworkPusher NETWORK_PUSHER;
+    public static NetworkBestPusher NETWORK_BEST_PUSHER;
+    public static NetworkControlX NETWORK_CONTROL_X;
+    public static NetworkControlV NETWORK_CONTROL_V;
+    public static NetworkVacuum NETWORK_VACUUM;
+    public static NetworkVanillaGrabber NETWORK_VANILLA_GRABBER;
+    public static NetworkVanillaPusher NETWORK_VANILLA_PUSHER;
+    public static NetworkWirelessTransmitter NETWORK_WIRELESS_TRANSMITTER;
+    public static NetworkWirelessReceiver NETWORK_WIRELESS_RECEIVER;
+    public static NetworkPurger NETWORK_PURGER;
+    public static NetworkGrid NETWORK_GRID;
+    public static NetworkCraftingGrid NETWORK_CRAFTING_GRID;
+    public static NetworkCell NETWORK_CELL;
+    public static NetworkGreedyBlock NETWORK_GREEDY_BLOCK;
+    public static NetworkQuantumWorkbench NETWORK_QUANTUM_WORKBENCH;
+    public static NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_1;
+    public static NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_2;
+    public static NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_3;
+    public static NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_4;
+    public static NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_5;
+    public static NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_6;
+    public static NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_7;
+    public static NetworkQuantumStorage NETWORK_QUANTUM_STORAGE_8;
+    public static NetworkPowerNode NETWORK_CAPACITOR_1;
+    public static NetworkPowerNode NETWORK_CAPACITOR_2;
+    public static NetworkPowerNode NETWORK_CAPACITOR_3;
+    public static NetworkPowerNode NETWORK_CAPACITOR_4;
+    public static NetworkPowerOutlet NETWORK_POWER_OUTLET_1;
+    public static NetworkPowerOutlet NETWORK_POWER_OUTLET_2;
+    public static NetworkPowerDisplay NETWORK_POWER_DISPLAY;
+    public static NetworkEncoder NETWORK_RECIPE_ENCODER;
+    public static NetworkAutoCrafter NETWORK_AUTO_CRAFTER;
+    public static NetworkAutoCrafter NETWORK_AUTO_CRAFTER_WITHHOLDING;
+
+    public static CraftingBlueprint CRAFTING_BLUEPRINT;
+    public static NetworkProbe NETWORK_PROBE;
+    public static NetworkRemote NETWORK_REMOTE;
+    public static NetworkRemote NETWORK_REMOTE_EMPOWERED;
+    public static NetworkRemote NETWORK_REMOTE_PRISTINE;
+    public static NetworkRemote NETWORK_REMOTE_ULTIMATE;
+    public static NetworkCrayon NETWORK_CRAYON;
+    public static NetworkConfigurator NETWORK_CONFIGURATOR;
+    public static NetworkWirelessConfigurator NETWORK_WIRELESS_CONFIGURATOR;
+    public static NetworkRake NETWORK_RAKE_1;
+    public static NetworkRake NETWORK_RAKE_2;
+    public static NetworkRake NETWORK_RAKE_3;
+    public static NetworkAdminDebugger NETWORK_ADMIN_DEBUGGER;
 
     // Guard supaya setup() hanya jalan sekali
     private static boolean registered = false;
 
-    static {
+    private static ItemStack[] makeRecipe(Object... items) {
+        ItemStack[] realItems = new ItemStack[9];
+        for (int i = 0; i < items.length; i++) {
+            Object item = items[i];
+            if (item instanceof ItemStack is) {
+                realItems[i] = is;
+            } else if (item instanceof SlimefunItemStack sfis) {
+                realItems[i] = Converter.getItem(sfis);
+            }
+        }
+
+        return realItems;
+    }
+
+    /**
+     * Panggilan registrasi item Slimefun. Dicontain supaya cuma register sekali,
+     * thread-safe, dan tiap item dibungkus try/catch sehingga satu gagal tidak
+     * mencegah item lain.
+     */
+    public static synchronized void setup() {
+        Networks plugin = Networks.getInstance();
+
+        if (registered) {
+            if (plugin != null) {
+                plugin.getLogger().fine("NetworkSlimefunItems.setup() called but items already registered — skipping.");
+            }
+            return;
+        }
+
+        if (plugin == null) {
+            System.err.println("[Networks] NetworkSlimefunItems.setup(): Networks.getInstance() returned null — aborting registration.");
+            return;
+        }
+
+        // set guard early to prevent reentrancy issues
+        registered = true;
+
+        // ---------------------------
+        // 1) Create all item instances
+        // ---------------------------
         final ItemStack glass = new ItemStack(Material.GLASS);
 
         SYNTHETIC_EMERALD_SHARD = new UnplaceableBlock(
@@ -748,7 +788,7 @@ public class NetworkSlimefunItems {
                 ),
                 NetworkQuantumStorage.getSizes()[7]
         );
-        // (static initializer lanjut seperti semula...)
+
         NETWORK_CAPACITOR_1 = new NetworkPowerNode(
                 NetworksItemGroups.NETWORK_ITEMS,
                 NetworksSlimefunItemStacks.NETWORK_CAPACITOR_1,
@@ -1014,44 +1054,10 @@ public class NetworkSlimefunItems {
                 RecipeType.NULL,
                 new ItemStack[]{}
         );
-    }
 
-    private static ItemStack[] makeRecipe(Object... items) {
-        ItemStack[] realItems = new ItemStack[9];
-        for (int i = 0; i < items.length; i++) {
-            Object item = items[i];
-            if (item instanceof ItemStack is) {
-                realItems[i] = is;
-            } else if (item instanceof SlimefunItemStack sfis) {
-                realItems[i] = Converter.getItem(sfis);
-            }
-        }
-
-        return realItems;
-    }
-
-    /**
-     * Panggilan registrasi item Slimefun. Dicontain supaya cuma register sekali,
-     * thread-safe, dan tiap item dibungkus try/catch sehingga satu gagal tidak
-     * mencegah item lain.
-     */
-    public static synchronized void setup() {
-        Networks plugin = Networks.getInstance();
-
-        if (registered) {
-            if (plugin != null) {
-                plugin.getLogger().fine("NetworkSlimefunItems.setup() called but items already registered — skipping.");
-            }
-            return;
-        }
-        registered = true;
-
-        if (plugin == null) {
-            System.err.println("[Networks] NetworkSlimefunItems.setup(): Networks.getInstance() returned null — aborting registration.");
-            return;
-        }
-
-        // register all items, each via helper agar tidak crash seluruh setup jika satu gagal
+        // ---------------------------
+        // 2) Register all items (safely)
+        // ---------------------------
         registerSafely(plugin, () -> SYNTHETIC_EMERALD_SHARD.register(plugin), "SYNTHETIC_EMERALD_SHARD");
         registerSafely(plugin, () -> OPTIC_GLASS.register(plugin), "OPTIC_GLASS");
         registerSafely(plugin, () -> OPTIC_CABLE.register(plugin), "OPTIC_CABLE");
@@ -1083,7 +1089,7 @@ public class NetworkSlimefunItems {
         registerSafely(plugin, () -> NETWORK_BRIDGE_BLACK.register(plugin), "NETWORK_BRIDGE_BLACK");
 
         registerSafely(plugin, () -> NETWORK_BRIDGE_TEST.register(plugin), "NETWORK_BRIDGE_TEST");
-        
+
         registerSafely(plugin, () -> NETWORK_MONITOR.register(plugin), "NETWORK_MONITOR");
         registerSafely(plugin, () -> NETWORK_IMPORT.register(plugin), "NETWORK_IMPORT");
         registerSafely(plugin, () -> NETWORK_EXPORT.register(plugin), "NETWORK_EXPORT");
