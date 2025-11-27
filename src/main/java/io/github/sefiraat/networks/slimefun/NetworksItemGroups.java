@@ -7,6 +7,7 @@ import io.github.sefiraat.networks.utils.ItemCreator;
 import io.github.sefiraat.networks.utils.Keys;
 import io.github.sefiraat.networks.utils.Theme;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
+import lombok.experimental.UtilityClass;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -14,92 +15,88 @@ import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
 
-/**
- * Kelas holder statis untuk ItemGroups plugin.
- * Tidak menggunakan Lombok @UtilityClass agar lebih portable.
- */
+@UtilityClass
 public final class NetworksItemGroups {
 
-    private NetworksItemGroups() {
-        // prevent instantiation
+    // debug-safe: jangan pakai refleksi ke CraftMeta (menghasilkan IllegalAccessException)
+    private static ItemStack mk(Material m, String name) {
+        ItemStack it = ItemCreator.create(m, name);
+
+        // Log apa yang kita kirim (nama yang kita berikan)
+        System.out.println("[DBG] Created item request: material=" + m + " requestedDisplayName=" + name);
+
+        try {
+            if (it.hasItemMeta()) {
+                if (it.getItemMeta().hasDisplayName()) {
+                    System.out.println("[DBG]   meta.hasDisplayName()=true");
+                }
+                if (it.getItemMeta().hasLore()) {
+                    System.out.println("[DBG]   meta.hasLore()=true");
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        return it;
     }
 
     public static final MainFlexGroup MAIN = new MainFlexGroup(
             Keys.newKey("main"),
-            ItemCreator.create(
-                    new ItemStack(Material.CHORUS_FLOWER),
-                    Theme.MAIN.getColor() + "Networks V2"
-            )
+            mk(Material.CHORUS_FLOWER, Theme.applyThemeToString(Theme.MAIN, "Networks V2"))
     );
 
     public static final DummyItemGroup MATERIALS = new DummyItemGroup(
             Keys.newKey("materials"),
-            ItemCreator.create(
-                    new ItemStack(Material.WHITE_STAINED_GLASS),
-                    Theme.MAIN.getColor() + "Crafting Materials"
-            )
+            mk(Material.WHITE_STAINED_GLASS, Theme.applyThemeToString(Theme.MAIN, "Crafting Materials"))
     );
 
     public static final DummyItemGroup TOOLS = new DummyItemGroup(
             Keys.newKey("tools"),
-            ItemCreator.create(
-                    new ItemStack(Material.PAINTING),
-                    Theme.MAIN.getColor() + "Network Management Tools"
-            )
+            mk(Material.PAINTING, Theme.applyThemeToString(Theme.MAIN, "Network Management Tools"))
     );
 
     public static final DummyItemGroup NETWORK_ITEMS = new DummyItemGroup(
             Keys.newKey("network_items"),
-            ItemCreator.create(
-                    new ItemStack(Material.BLACK_STAINED_GLASS),
-                    Theme.MAIN.getColor() + "Network Items"
-            )
+            mk(Material.BLACK_STAINED_GLASS, Theme.applyThemeToString(Theme.MAIN, "Network Items"))
     );
 
     public static final DummyItemGroup NETWORK_QUANTUMS = new DummyItemGroup(
             Keys.newKey("network_quantums"),
-            ItemCreator.create(
-                    new ItemStack(Material.WHITE_TERRACOTTA),
-                    Theme.MAIN.getColor() + "Network Quantum Storage Devices"
-            )
+            mk(Material.WHITE_TERRACOTTA, Theme.applyThemeToString(Theme.MAIN, "Network Quantum Storage Devices"))
     );
 
     public static final DummyItemGroup MORE_NETWORK_BRIDGE = new DummyItemGroup(
             Keys.newKey("more_network_bridge"),
-            ItemCreator.create(
-                    new ItemStack(Material.PINK_STAINED_GLASS),
-                    Theme.MAIN.getColor() + "More Network Bridge"
-            )
-    );
-
-    public static final DummyItemGroup NETWORK_TEST = new DummyItemGroup(
-            Keys.newKey("network_test"),
-            ItemCreator.create(
-                    new ItemStack(Material.GLASS),
-                    Theme.MAIN.getColor() + "Network Test"
-            )
+            mk(Material.PINK_STAINED_GLASS, Theme.applyThemeToString(Theme.MAIN, "More Network Bridge"))
     );
 
     public static final ItemGroup DISABLED_ITEMS = new HiddenItemGroup(
             Keys.newKey("disabled_items"),
-            ItemCreator.create(
-                    new ItemStack(Material.BARRIER),
-                    Theme.MAIN.getColor() + "Disabled/Removed Items"
-            )
+            mk(Material.BARRIER, Theme.applyThemeToString(Theme.MAIN, "Disabled/Removed Items"))
     );
 
     static {
         final Networks plugin = Networks.getInstance();
 
-        // Register semua ItemGroup ke Slimefun
-        MAIN.register(plugin);
-        MATERIALS.register(plugin);
-        TOOLS.register(plugin);
-        NETWORK_ITEMS.register(plugin);
-        NETWORK_QUANTUMS.register(plugin);
-        DISABLED_ITEMS.register(plugin);
-        MORE_NETWORK_BRIDGE.register(plugin);
-        NETWORK_TEST.register(plugin);
+        // Slimefun Registry with per-group try/catch + logging
+        registerSafely(plugin, MAIN, "MAIN");
+        registerSafely(plugin, MATERIALS, "MATERIALS");
+        registerSafely(plugin, TOOLS, "TOOLS");
+        registerSafely(plugin, NETWORK_ITEMS, "NETWORK_ITEMS");
+        registerSafely(plugin, NETWORK_QUANTUMS, "NETWORK_QUANTUMS");
+        registerSafely(plugin, DISABLED_ITEMS, "DISABLED_ITEMS");
+        registerSafely(plugin, MORE_NETWORK_BRIDGE, "MORE_NETWORK_BRIDGE");
+    }
+
+    private static void registerSafely(Networks plugin, ItemGroup g, String name) {
+        try {
+            NamespacedKey key = g.getKey();
+            System.out.println("[DBG] Registering group " + name + " key=" + key.toString());
+            g.register(plugin);
+            System.out.println("[DBG] Registered group " + name);
+        } catch (Throwable t) {
+            System.out.println("[ERR] Failed to register group " + name + " : " + t);
+            t.printStackTrace();
+        }
     }
 
     public static class HiddenItemGroup extends ItemGroup {
@@ -108,10 +105,9 @@ public final class NetworksItemGroups {
             super(key, item);
         }
 
-        // isHidden(Player) deprecated — override isVisible untuk kontrol visibilitas
         @Override
-        public boolean isVisible(@Nonnull Player player) {
-            return false; // selalu tersembunyi
+        public boolean isHidden(@Nonnull Player p) {
+            return true;
         }
     }
 }

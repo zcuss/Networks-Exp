@@ -41,7 +41,6 @@ public class MainFlexGroup extends FlexItemGroup {
     private static final int NETWORK_ITEMS = 12;
     private static final int NETWORK_QUANTUMS = 13;
     private static final int MORE_NETWORK_BRIDGE = 14;
-    private static final int NETWORK_TEST = 15;
 
     private static final int[] HEADER = new int[]{
             0, 1, 2, 3, 4, 5, 6, 7, 8
@@ -136,12 +135,6 @@ public class MainFlexGroup extends FlexItemGroup {
         menu.replaceExistingItem(MORE_NETWORK_BRIDGE, NetworksItemGroups.MORE_NETWORK_BRIDGE.getItem(player));
         menu.addMenuClickHandler(MORE_NETWORK_BRIDGE, (player1, i1, itemStack1, clickAction) ->
                 openPage(profile, NetworksItemGroups.MORE_NETWORK_BRIDGE, mode, 1)
-        );
-
-
-        menu.replaceExistingItem(NETWORK_TEST, NetworksItemGroups.NETWORK_TEST.getItem(player));
-        menu.addMenuClickHandler(NETWORK_TEST, (player1, i1, itemStack1, clickAction) ->
-                openPage(profile, NetworksItemGroups.NETWORK_TEST, mode, 1)
         );
     }
 

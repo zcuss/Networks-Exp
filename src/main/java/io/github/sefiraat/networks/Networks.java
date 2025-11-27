@@ -4,11 +4,9 @@ import com.balugaq.netex.utils.Converter;
 import io.github.sefiraat.networks.commands.NetworksMain;
 import io.github.sefiraat.networks.integrations.HudCallbacks;
 import io.github.sefiraat.networks.integrations.NetheoPlants;
-import io.github.sefiraat.networks.listeners.QuantumStorageInsertBlocker;
 import io.github.sefiraat.networks.managers.ListenerManager;
 import io.github.sefiraat.networks.managers.SupportedPluginManager;
 import io.github.sefiraat.networks.slimefun.NetworkSlimefunItems;
-// import io.github.sefiraat.networks.slimefun.NetworksItemGroups;
 import io.github.sefiraat.networks.slimefun.NetworksSlimefunItemStacks;
 import io.github.sefiraat.networks.slimefun.network.NetworkController;
 import io.github.sefiraat.networks.utils.NetworkUtils;
@@ -84,15 +82,10 @@ public class Networks extends JavaPlugin implements SlimefunAddon {
         tryUpdate();
 
         this.supportedPluginManager = new SupportedPluginManager();
-        // NetworksItemGroups.registerAll(this);
+
         setupSlimefun();
 
         this.listenerManager = new ListenerManager();
-
-        // Daftarkan QuantumStorageInsertBlocker
-        getLogger().info("Registering QuantumStorageInsertBlocker");
-        getServer().getPluginManager().registerEvents(new QuantumStorageInsertBlocker(), this);
-        
         this.getCommand("networks").setExecutor(new NetworksMain());
 
         // Fix dupe bug which break the network controller data without player interaction
